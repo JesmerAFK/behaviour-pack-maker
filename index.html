@@ -1,22 +1,28 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JMAFK AFK BH Maker</title>
-    <meta name="description" content="Minecraft Bedrock Behavior Pack Maker by JMAFK">
-    
+    <title>JMAFK Hub - Bedrock Platform</title>
+    <meta name="description" content="Minecraft Bedrock Hub & Creator Studio by JMAFK">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- JSZip -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
+    <!-- Marked (Markdown Parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify (Sanitization) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -31,6 +37,7 @@
                         'primary-dark': '#047857', // emerald-700
                         background: '#0f172a', // slate-900
                         surface: '#1e293b', // slate-800
+                        surface1: '#273548', // slightly lighter
                         surface2: '#334155', // slate-700
                         accent: '#22c55e', // green-500
                     }
@@ -39,26 +46,145 @@
         }
     </script>
     <style>
+        .dragging-over {
+            border: 4px dashed #a6e3a1;
+            opacity: 0.8;
+        }
+
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Mobile Inputs: 16px to prevent zoom */
+        input,
+        textarea,
+        select {
+            font-size: 16px !important;
+        }
+
         /* Editor specific */
         .code-editor-container {
             counter-reset: line;
         }
-        /* Prevent iOS zoom on inputs */
-        @media screen and (max-width: 768px) {
-            input, textarea, select {
-                font-size: 16px !important; 
+
+        /* Animations */
+        #mobile-menu {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .menu-open {
+            transform: translateX(0);
+        }
+
+        .menu-closed {
+            transform: translateX(-100%);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-        /* Mobile Navigation Animation */
-        #mobile-menu { transition: transform 0.3s ease-in-out; }
-        .menu-open { transform: translateX(0); }
-        .menu-closed { transform: translateX(-100%); }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        /* Markdown Styles */
+        .markdown-body h1 {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            color: white;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #e2e8f0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 1em;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .markdown-body ul {
+            list-style-type: disc;
+            padding-left: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        .markdown-body code {
+            background: #334155;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-body pre {
+            background: #1e293b;
+            padding: 1em;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+            border: 1px solid #334155;
+        }
+
+        .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1em 0;
+        }
+
+        .markdown-body a {
+            color: #22c55e;
+            text-decoration: underline;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid #22c55e;
+            padding-left: 1em;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
     </style>
     <script type="importmap">
 {
@@ -71,318 +197,431 @@
 }
 </script>
 </head>
-<body class="bg-background text-gray-200 font-sans h-screen flex flex-col overflow-hidden">
+
+<body
+    class="bg-background text-gray-200 font-sans h-screen flex flex-col overflow-hidden selection:bg-primary selection:text-white">
 
     <!-- TOP NAVIGATION -->
-    <nav class="bg-surface border-b border-surface2 h-16 shrink-0 flex items-center justify-between px-4 z-50 relative">
+    <nav
+        class="bg-surface border-b border-surface2 h-16 shrink-0 flex items-center justify-between px-4 z-50 relative shadow-lg">
         <div class="flex items-center gap-4">
-            <button id="hamburger-btn" class="md:hidden text-gray-300 hover:text-white p-2 -ml-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button id="hamburger-btn"
+                class="md:hidden text-gray-300 hover:text-white p-2 -ml-2 rounded-lg active:bg-surface2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
-            <div class="flex items-center gap-2">
-                <span class="text-primary font-bold text-xl md:text-2xl tracking-tight">JMAFK AFK BH Maker</span>
+            <div class="flex items-center gap-2 cursor-pointer" onclick="app.router.go('hub')">
+                <div
+                    class="w-8 h-8 bg-gradient-to-br from-primary to-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">
+                    J</div>
+                <span class="text-white font-bold text-xl md:text-2xl tracking-tight">JMAFK <span
+                        class="text-primary">Hub</span></span>
             </div>
         </div>
-        
+
         <!-- Desktop Menu -->
-        <div class="hidden md:flex items-center space-x-6 text-sm font-medium">
-            <button onclick="app.router.go('home')" class="hover:text-primary transition-colors">Home</button>
-            <button onclick="app.router.go('manifest')" class="hover:text-primary transition-colors">Manifest</button>
-            <button onclick="app.router.go('workspace')" class="hover:text-primary transition-colors">Codes & Files</button>
-            <button onclick="app.router.go('settings')" class="hover:text-primary transition-colors">API Settings</button>
-            <button onclick="app.router.go('credits')" class="hover:text-primary transition-colors">Credits</button>
+        <div class="hidden md:flex items-center bg-surface1 p-1 rounded-lg border border-surface2">
+            <button onclick="app.router.go('hub')" id="nav-hub"
+                class="px-4 py-1.5 rounded-md text-sm font-bold transition-all text-white bg-surface2 shadow-sm">Store</button>
+            <button onclick="app.router.go('home')" id="nav-studio"
+                class="px-4 py-1.5 rounded-md text-sm font-bold transition-all text-gray-400 hover:text-white">Creator
+                Studio</button>
         </div>
 
-        <!-- Status Indicator -->
-        <div id="save-indicator" class="text-xs text-gray-500 font-mono hidden md:block">
-            Saved locally
+        <div class="hidden md:flex items-center gap-3">
+            <button onclick="app.router.go('settings')" class="p-2 text-gray-400 hover:text-primary transition-colors"
+                title="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
         </div>
     </nav>
 
     <!-- MOBILE MENU DRAWER -->
-    <div id="mobile-menu" class="fixed inset-y-0 left-0 w-72 bg-surface shadow-2xl z-[60] menu-closed md:hidden flex flex-col border-r border-surface2">
+    <div id="mobile-menu"
+        class="fixed inset-y-0 left-0 w-72 bg-surface shadow-2xl z-[60] menu-closed md:hidden flex flex-col border-r border-surface2">
         <div class="p-4 border-b border-surface2 flex justify-between items-center h-16">
-            <span class="font-bold text-white text-lg">Menu</span>
-            <button id="close-menu-btn" class="text-gray-400 hover:text-white p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span class="font-bold text-white text-lg">JMAFK Hub</span>
+            <button id="close-menu-btn" class="text-gray-400 hover:text-white p-2 rounded-lg active:bg-surface2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
-        <nav class="flex flex-col p-2 space-y-2">
-            <button onclick="app.router.go('home')" class="text-left px-4 py-4 rounded-lg hover:bg-surface2 text-lg font-medium">Home</button>
-            <button onclick="app.router.go('manifest')" class="text-left px-4 py-4 rounded-lg hover:bg-surface2 text-lg font-medium">Manifest Maker</button>
-            <button onclick="app.router.go('workspace')" class="text-left px-4 py-4 rounded-lg hover:bg-surface2 text-lg font-medium">Codes & Files</button>
-            <button onclick="app.router.go('settings')" class="text-left px-4 py-4 rounded-lg hover:bg-surface2 text-lg font-medium">API Settings</button>
-            <button onclick="app.router.go('credits')" class="text-left px-4 py-4 rounded-lg hover:bg-surface2 text-lg font-medium">Credits</button>
+        <nav class="flex flex-col p-2 space-y-1">
+            <div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Discover</div>
+            <button onclick="app.router.go('hub')"
+                class="text-left px-4 py-3 rounded-lg hover:bg-surface2 text-base font-medium text-white flex items-center gap-3">
+                <span class="text-xl">🏪</span> Store Home
+            </button>
+
+            <div class="mt-4 px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Create</div>
+            <button onclick="app.router.go('home')"
+                class="text-left px-4 py-3 rounded-lg hover:bg-surface2 text-base font-medium text-gray-300 flex items-center gap-3">
+                <span class="text-xl">🛠️</span> Studio Home
+            </button>
+            <button onclick="app.router.go('manifest')"
+                class="text-left px-4 py-3 rounded-lg hover:bg-surface2 text-base font-medium text-gray-300 flex items-center gap-3">
+                <span class="text-xl">📝</span> Manifest
+            </button>
+            <button onclick="app.router.go('workspace')"
+                class="text-left px-4 py-3 rounded-lg hover:bg-surface2 text-base font-medium text-gray-300 flex items-center gap-3">
+                <span class="text-xl">💻</span> Code Editor
+            </button>
+
+            <div class="mt-4 px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">System</div>
+            <button onclick="app.router.go('settings')"
+                class="text-left px-4 py-3 rounded-lg hover:bg-surface2 text-base font-medium text-gray-300 flex items-center gap-3">
+                <span class="text-xl">⚙️</span> Settings
+            </button>
         </nav>
-        <div class="mt-auto p-4 border-t border-surface2 text-xs text-gray-500">
-            Developer: @JMAFK
-        </div>
     </div>
-    
-    <!-- MOBILE OVERLAY -->
+
     <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-[55] hidden md:hidden glass"></div>
 
     <!-- MAIN CONTENT AREA -->
     <main id="main-container" class="flex-grow overflow-hidden relative bg-background">
-        
-       <!-- VIEW: HOME -->
-<div id="view-home" class="view-section absolute inset-0 overflow-y-auto flex flex-col items-center justify-center text-center bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] bg-fixed">
-    
-    <!-- Animated Background Gradient Blob (Optional visual flair) -->
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-full opacity-20 pointer-events-none bg-gradient-to-b from-primary/30 via-accent/10 to-transparent blur-3xl"></div>
 
-    <div class="relative z-10 max-w-4xl w-full px-6 py-12 space-y-10">
-        
-        <!-- Hero Section -->
-        <div class="space-y-4 animate-fade-in-up">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-white/10 text-xs font-medium text-accent mb-4">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                v1.0 Stable Release
-            </div>
-            
-            <h1 class="text-5xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl">
-                JMAFK <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">BH MAKER</span>
-            </h1>
-            
-            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                The ultimate <span class="text-white font-semibold">AI-Powered</span> workspace for Minecraft Bedrock. 
-                Create scripts, generating manifests, and design pixel art—all in your browser.
-            </p>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-lg mx-auto animate-fade-in-up delay-100">
-            <button onclick="app.router.go('manifest')" class="group relative flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:-translate-y-1 active:scale-95 shadow-lg shadow-primary/25 w-full sm:w-auto overflow-hidden">
-                <!-- Glow effect -->
-                <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>New Project</span>
-            </button>
-
-            <button onclick="document.getElementById('import-file').click()" class="group flex items-center justify-center gap-3 bg-surface2 hover:bg-surface2/80 text-gray-200 font-bold py-4 px-8 rounded-xl transition-all hover:-translate-y-1 active:scale-95 border border-white/10 w-full sm:w-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span>Import .mcpack</span>
-            </button>
-            <input type="file" id="import-file" class="hidden" accept=".zip,.mcpack">
-        </div>
-
-        <!-- Features Grid (Visual Trust) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-8 animate-fade-in-up delay-200">
-            <!-- Feature 1 -->
-            <div class="bg-surface1/50 p-5 rounded-2xl border border-white/5 backdrop-blur-sm hover:bg-surface1 transition-colors">
-                <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+        <!-- VIEW: HUB (Store) -->
+        <div id="view-hub" class="view-section absolute inset-0 overflow-y-auto bg-background">
+            <!-- Hero -->
+            <div class="relative h-64 md:h-80 w-full overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-[url('https://www.minecraft.net/content/dam/games/minecraft/key-art/Games_Subnav_Minecraft-300x465.jpg')] bg-cover bg-center opacity-30">
                 </div>
-                <h3 class="text-white font-bold mb-1">AI Scripting</h3>
-                <p class="text-xs text-gray-400">Generate complex GameTest scripts instantly with Gemini 2.0.</p>
-            </div>
-            <!-- Feature 2 -->
-            <div class="bg-surface1/50 p-5 rounded-2xl border border-white/5 backdrop-blur-sm hover:bg-surface1 transition-colors">
-                <div class="w-10 h-10 bg-purple-500/20 text-purple-400 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                </div>
-                <h3 class="text-white font-bold mb-1">Pixel Art</h3>
-                <p class="text-xs text-gray-400">Create custom item textures and pack icons automatically.</p>
-            </div>
-            <!-- Feature 3 -->
-            <div class="bg-surface1/50 p-5 rounded-2xl border border-white/5 backdrop-blur-sm hover:bg-surface1 transition-colors">
-                <div class="w-10 h-10 bg-green-500/20 text-green-400 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                </div>
-                <h3 class="text-white font-bold mb-1">Auto-Save</h3>
-                <p class="text-xs text-gray-400">Never lose work. Your progress persists even if you close the tab.</p>
-            </div>
-        </div>
-
-        <!-- Footer Note -->
-        <div class="pt-8 border-t border-white/5">
-            <p class="text-sm text-gray-500">
-                Developed by <span class="text-primary font-bold">@JMAFK</span> • 
-                <a href="https://discord.gg/CtKukG3Jeu" target="_blank" class="hover:text-white transition-colors">Join Discord</a>
-            </p>
-        </div>
-    </div>
-</div>
-
-       <!-- VIEW: MANIFEST MAKER -->
-<div id="view-manifest" class="view-section absolute inset-0 overflow-y-auto p-4 hidden bg-black/90 z-40">
-    <div class="max-w-2xl mx-auto w-full pb-24 animate-fade-in-up"> <!-- pb-24 for mobile safe area -->
-        
-        <!-- Form Card -->
-        <div class="bg-surface1 border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl">
-            
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                <div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-white">Project Manifest</h2>
-                    <p class="text-sm text-gray-400 mt-1">Configure your Behavior Pack metadata.</p>
-                </div>
-                <div class="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center border border-primary/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 md:p-10 max-w-4xl">
+                    <h1 class="text-4xl md:text-6xl font-black text-white mb-2 drop-shadow-lg">JMAFK <span
+                            class="text-primary">HUB</span></h1>
+                    <p class="text-gray-300 text-lg md:text-xl max-w-xl drop-shadow-md">
+                        The ultimate destination for Bedrock Addons, Maps, and Texture Packs.
+                    </p>
                 </div>
             </div>
-            
-            <div class="space-y-6">
-                <!-- Basic Info Group -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Pack Name</label>
-                        <input type="text" id="m-name" class="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="My Awesome Addon">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Description</label>
-                        <textarea id="m-desc" rows="3" class="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" placeholder="What does this addon do?"></textarea>
-                    </div>
-                </div>
 
-                <!-- Meta Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Author</label>
-                        <div class="relative">
-                            <input type="text" id="m-author" class="w-full bg-black/20 border border-white/10 rounded-xl p-4 pl-10 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Your Name">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Version</label>
-                        <input type="text" id="m-version" class="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" value="1.0.0">
-                    </div>
-                </div>
-                
-                <!-- Engine Version -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Min Engine Version</label>
-                    <div class="relative">
-                         <input type="text" id="m-engine" class="w-full bg-black/20 border border-white/10 rounded-xl p-4 pl-10 text-white font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" value="1.21.0">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                    </div>
-                </div>
-
-                <!-- Dependencies Section -->
-                <div class="mt-8 border-t border-white/5 pt-6">
-                    <div class="flex items-center justify-between mb-4">
-                         <h3 class="text-lg font-bold text-white">Dependencies</h3>
-                         <span class="text-xs text-gray-500 bg-black/30 px-2 py-1 rounded border border-white/5">@minecraft/server</span>
-                    </div>
-                    
-                    <div id="m-dependencies-list" class="space-y-3 mb-4 min-h-[50px]">
-                        <!-- JS will inject dependency inputs here -->
-                    </div>
-
-                    <button onclick="app.manifest.addDependency()" class="group w-full py-3 rounded-xl border border-dashed border-white/20 hover:border-primary/50 text-gray-400 hover:text-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 font-medium text-sm">
-                        <div class="bg-white/5 p-1 rounded group-hover:bg-primary group-hover:text-white transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        </div>
-                        Add Module Dependency
+            <!-- Content Grid -->
+            <div class="p-4 md:p-8 max-w-7xl mx-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-primary rounded-full"></span>
+                        Featured Content
+                    </h2>
+                    <button onclick="app.hub.refresh()"
+                        class="text-sm text-primary hover:text-primary-dark font-bold flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
                     </button>
                 </div>
-            </div>
 
-            <!-- Submit Action -->
-            <div class="mt-10 pt-6 border-t border-white/10">
-                <button onclick="app.generateManifest()" class="w-full group bg-primary hover:bg-primary-dark text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 text-lg">
-                    <span>Create & Open Workspace</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                </button>
+                <div id="hub-loading" class="flex flex-col items-center justify-center py-20 hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p class="text-gray-400">Loading content from Database...</p>
+                </div>
+
+                <div id="hub-error" class="bg-red-500/10 border border-red-500/20 rounded-xl p-8 text-center hidden">
+                    <p class="text-red-400 font-bold text-lg mb-2">Failed to load content</p>
+                    <p class="text-gray-400 text-sm mb-4" id="hub-error-msg"></p>
+                    <button onclick="app.hub.refresh()"
+                        class="bg-surface2 hover:bg-surface text-white px-4 py-2 rounded-lg text-sm">Try Again</button>
+                </div>
+
+                <div id="hub-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Cards Injected Here -->
+                </div>
             </div>
         </div>
-    </div>
-</div>
+
+        <!-- VIEW: POST DETAIL -->
+        <div id="view-post" class="view-section absolute inset-0 overflow-y-auto bg-background hidden z-20">
+            <div class="max-w-5xl mx-auto bg-surface border-x border-surface2 min-h-full shadow-2xl">
+                <!-- Post Header -->
+                <div class="relative h-64 w-full bg-surface1">
+                    <img id="post-banner" class="w-full h-full object-cover opacity-50 blur-sm" src="">
+                    <div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
+                    <button onclick="app.router.go('hub')"
+                        class="absolute top-4 left-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-md transition-all z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="px-6 md:px-10 -mt-20 relative">
+                    <div class="flex flex-col md:flex-row gap-6 items-start">
+                        <!-- Thumb -->
+                        <img id="post-thumb"
+                            class="w-32 h-32 md:w-48 md:h-48 rounded-xl border-4 border-surface shadow-2xl bg-surface2 object-cover shrink-0">
+
+                        <!-- Meta -->
+                        <div class="flex-1 pt-2 md:pt-20">
+                            <h1 id="post-title" class="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">
+                                Loading...</h1>
+                            <div class="flex flex-wrap gap-3 text-sm text-gray-400 items-center mb-4">
+                                <span id="post-author" class="flex items-center gap-1"><svg class="w-4 h-4" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg> Author</span>
+                                <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+                                <span id="post-type"
+                                    class="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase">Addon</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-20">
+                            <a id="post-download-btn" href="#" target="_blank"
+                                class="flex-1 md:w-48 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-transform active:scale-95 text-center text-sm md:text-base">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                CurseForge / External
+                            </a>
+                            <button onclick="app.hub.toggleLike()" id="post-like-btn"
+                                class="flex-1 md:w-48 bg-surface2 hover:bg-surface1 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors border border-white/5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span id="post-like-count">Like</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="h-px bg-surface2 my-8"></div>
+
+                    <!-- Markdown Content -->
+                    <div id="post-content" class="markdown-body pb-20">
+                        <!-- Rendered Markdown -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: STUDIO HOME -->
+        <div id="view-home"
+            class="view-section absolute inset-0 overflow-y-auto flex flex-col items-center justify-center text-center bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] bg-fixed hidden">
+            <div
+                class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-full opacity-20 pointer-events-none bg-gradient-to-b from-primary/30 via-accent/10 to-transparent blur-3xl">
+            </div>
+            <div class="relative z-10 max-w-4xl w-full px-6 py-12 space-y-10">
+                <div class="space-y-4 animate-fade-in-up">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-white/10 text-xs font-medium text-accent mb-4">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        Creator Studio
+                    </div>
+                    <h1 class="text-4xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl">
+                        CREATE <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">YOUR
+                            PACK</span>
+                    </h1>
+                    <p class="text-base md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                        The advanced toolset for Behavior Packs. Edit scripts, generate manifests, and design textures
+                        directly in your browser.
+                    </p>
+                </div>
+
+                <div
+                    class="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-lg mx-auto animate-fade-in-up delay-100">
+                    <button onclick="app.router.go('manifest')"
+                        class="group relative flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:-translate-y-1 active:scale-95 shadow-lg shadow-primary/25 w-full sm:w-auto overflow-hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>New Project</span>
+                    </button>
+                    <button onclick="document.getElementById('import-file').click()"
+                        class="group flex items-center justify-center gap-3 bg-surface2 hover:bg-surface2/80 text-gray-200 font-bold py-4 px-8 rounded-xl transition-all hover:-translate-y-1 active:scale-95 border border-white/10 w-full sm:w-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span>Import .mcpack</span>
+                    </button>
+                    <input type="file" id="import-file" class="hidden" accept=".zip,.mcpack">
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: MANIFEST MAKER -->
+        <div id="view-manifest" class="view-section absolute inset-0 overflow-y-auto p-4 hidden bg-background">
+            <div class="max-w-2xl mx-auto w-full pb-32">
+                <button onclick="app.router.go('home')"
+                    class="mb-4 text-gray-400 hover:text-white flex items-center gap-2 text-sm font-bold">← Back to
+                    Studio</button>
+                <div class="bg-surface border border-surface2 rounded-xl p-4 md:p-8 shadow-xl mt-2">
+                    <h2 class="text-2xl font-bold text-white mb-6 pb-4 border-b border-surface2">Project Manifest</h2>
+                    <!-- Same manifest form as before -->
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-400 mb-2">Pack Name</label>
+                            <input type="text" id="m-name"
+                                class="w-full bg-background border border-surface2 rounded-lg p-3 text-white focus:border-primary outline-none"
+                                placeholder="My Awesome Addon">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-400 mb-2">Description</label>
+                            <textarea id="m-desc" rows="3"
+                                class="w-full bg-background border border-surface2 rounded-lg p-3 text-white focus:border-primary outline-none"
+                                placeholder="What does this addon do?"></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-400 mb-2">Author</label>
+                                <input type="text" id="m-author"
+                                    class="w-full bg-background border border-surface2 rounded-lg p-3 text-white focus:border-primary outline-none"
+                                    placeholder="Your Name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-400 mb-2">Version</label>
+                                <input type="text" id="m-version"
+                                    class="w-full bg-background border border-surface2 rounded-lg p-3 text-white focus:border-primary outline-none"
+                                    value="1.0.0">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-400 mb-2">Min Engine Version</label>
+                            <input type="text" id="m-engine"
+                                class="w-full bg-background border border-surface2 rounded-lg p-3 text-white focus:border-primary outline-none"
+                                value="1.21.0">
+                        </div>
+
+                        <!-- Dependencies Section -->
+                        <div class="mt-8 border-t border-surface2 pt-6">
+                            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                Dependencies
+                            </h3>
+                            <div id="m-dependencies-list" class="space-y-3 mb-4"></div>
+                            <button onclick="app.manifest.addDependency()"
+                                class="w-full py-4 rounded-lg border-2 border-dashed border-surface2 hover:border-primary text-gray-400 hover:text-white hover:bg-surface2 transition-all flex items-center justify-center gap-2 font-bold text-base">
+                                + Add Dependency
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-10 pt-6 border-t border-surface2">
+                        <button onclick="app.generateManifest()"
+                            class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg shadow-lg">
+                            Create & Go to Workspace
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- VIEW: WORKSPACE (Main Editor) -->
         <div id="view-workspace" class="view-section absolute inset-0 flex flex-col hidden">
-            
+
             <!-- Workspace Sub-Navigation -->
-            <div class="bg-surface border-b border-surface2 p-2 md:p-3 flex justify-between items-center shrink-0 gap-2">
+            <div
+                class="bg-surface border-b border-surface2 p-2 flex justify-between items-center shrink-0 gap-2 z-10 shadow-md">
                 <!-- Mobile Tabs -->
-                <div class="flex md:hidden bg-background rounded-lg p-1 w-full max-w-md mx-auto">
-                    <button onclick="app.workspace.switchTab('files')" id="tab-btn-files" class="flex-1 py-2 text-sm font-bold rounded text-center transition-colors bg-primary text-white">Files</button>
-                    <button onclick="app.workspace.switchTab('editor')" id="tab-btn-editor" class="flex-1 py-2 text-sm font-bold rounded text-center transition-colors text-gray-400 hover:text-white">Code</button>
-                    <button onclick="app.workspace.switchTab('icon')" id="tab-btn-icon" class="flex-1 py-2 text-sm font-bold rounded text-center transition-colors text-gray-400 hover:text-white">Icon</button>
+                <div class="flex md:hidden bg-surface1 rounded-lg p-1 w-full max-w-md mx-auto border border-surface2">
+                    <button onclick="app.workspace.switchTab('files')" id="tab-btn-files"
+                        class="flex-1 py-3 text-sm font-bold rounded transition-all bg-primary text-white shadow-sm">Files</button>
+                    <button onclick="app.workspace.switchTab('editor')" id="tab-btn-editor"
+                        class="flex-1 py-3 text-sm font-bold rounded transition-all text-gray-400 hover:text-white">Code</button>
+                    <button onclick="app.workspace.switchTab('icon')" id="tab-btn-icon"
+                        class="flex-1 py-3 text-sm font-bold rounded transition-all text-gray-400 hover:text-white">Icon</button>
                 </div>
-                
-                <!-- Desktop Title (Hidden on mobile) -->
+
+                <!-- Desktop Title -->
                 <div class="hidden md:flex items-center text-sm font-bold text-gray-400">
-                    <span class="text-primary mr-2">Workspace</span> / <span id="current-file-label" class="ml-2 font-mono text-white">No file selected</span>
+                    <button onclick="app.router.go('home')" class="hover:text-white mr-2">Studio</button> / <span
+                        id="current-file-label" class="ml-2 font-mono text-white">No file selected</span>
                 </div>
 
-                <!-- Actions -->
+                <!-- Desktop Actions -->
                 <div class="hidden md:flex items-center gap-2 ml-auto">
-                     <!-- Desktop actions -->
-                     <button onclick="document.getElementById('import-file').click()" class="bg-surface2 hover:bg-gray-600 text-white p-2 rounded-lg text-xs font-bold flex items-center gap-1" title="Import Project">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                        <span class="hidden sm:inline">Import</span>
+                    <button onclick="document.getElementById('import-file').click()"
+                        class="bg-surface2 hover:bg-gray-600 text-white p-2 rounded-lg text-xs font-bold flex items-center gap-1"
+                        title="Import Project">
+                        Import
                     </button>
-
                     <div class="relative group">
-                        <button class="bg-primary hover:bg-primary-dark text-white py-2 px-3 rounded-lg text-xs font-bold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            <span class="hidden sm:inline">Export</span>
-                        </button>
-                        <div class="absolute right-0 top-full mt-1 w-48 bg-surface border border-surface2 rounded-lg shadow-xl hidden group-hover:block z-50">
-                            <button onclick="app.export.zip()" class="w-full text-left px-4 py-3 text-sm hover:bg-surface2 hover:text-white text-gray-300">Download .zip</button>
-                            <button onclick="app.export.mcpack()" class="w-full text-left px-4 py-3 text-sm hover:bg-surface2 hover:text-white text-primary font-medium">Export to Minecraft (.mcpack)</button>
+                        <button
+                            class="bg-primary hover:bg-primary-dark text-white py-2 px-3 rounded-lg text-xs font-bold flex items-center gap-1">Export</button>
+                        <div
+                            class="absolute right-0 top-full mt-1 w-48 bg-surface border border-surface2 rounded-lg shadow-xl hidden group-hover:block z-50">
+                            <button onclick="app.export.zip()"
+                                class="w-full text-left px-4 py-3 text-sm hover:bg-surface2 hover:text-white text-gray-300">Download
+                                .zip</button>
+                            <button onclick="app.export.mcpack()"
+                                class="w-full text-left px-4 py-3 text-sm hover:bg-surface2 hover:text-white text-primary font-medium">Export
+                                .mcpack</button>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Mobile Action Bar (Export/Import) -->
-            <div class="md:hidden flex justify-end px-4 pb-2 gap-2 border-b border-surface2 bg-surface">
-                 <button onclick="app.export.mcpack()" class="bg-primary text-white px-4 py-2 rounded text-sm font-bold">Export .mcpack</button>
-                 <button onclick="app.export.zip()" class="bg-surface2 text-white px-4 py-2 rounded text-sm font-bold">.zip</button>
             </div>
 
             <!-- Workspace Grid -->
             <div class="flex-1 flex overflow-hidden relative">
-                
                 <!-- COLUMN 1: FILE MANAGER -->
-                <div id="ws-col-files" class="w-full md:w-64 bg-surface border-r border-surface2 flex-col md:flex hidden h-full">
+                <div id="ws-col-files"
+                    class="w-full md:w-64 bg-surface border-r border-surface2 flex-col md:flex hidden h-full">
                     <div class="p-3 border-b border-surface2 flex justify-between items-center shrink-0">
-                        <span class="text-xs font-bold text-gray-400 uppercase">Explorer</span>
-                        <button onclick="app.files.createFilePrompt()" class="bg-surface2 text-white px-3 py-1 rounded text-sm">+</button>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Explorer</span>
+                        <button onclick="app.files.createFilePrompt()"
+                            class="bg-surface2 hover:bg-primary text-white w-6 h-6 rounded flex items-center justify-center text-lg font-bold">+</button>
                     </div>
-                    <div id="file-list" class="flex-1 overflow-y-auto p-2 space-y-1">
-                        <!-- File items injected here -->
-                    </div>
+                    <div id="file-list" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+                    <div class="p-2 text-[10px] text-center text-gray-600">Click name to rename</div>
                 </div>
 
                 <!-- COLUMN 2: CODE EDITOR -->
                 <div id="ws-col-editor" class="flex-1 flex-col bg-background md:flex hidden relative h-full">
                     <div class="flex-1 relative flex overflow-hidden">
-                        <!-- Line Numbers -->
-                        <div id="editor-lines" class="w-10 bg-surface text-right pr-2 pt-4 text-sm font-mono text-gray-500 select-none hidden md:block leading-relaxed">1</div>
-                        <!-- Text Area -->
-                        <textarea id="code-editor" class="flex-1 bg-background text-gray-300 p-4 font-mono text-base md:text-sm resize-none outline-none whitespace-pre overflow-auto leading-relaxed" spellcheck="false" placeholder="// Select a file to edit..."></textarea>
-                        <!-- Image Preview Overlay -->
-                        <div id="image-preview" class="absolute inset-0 bg-background flex items-center justify-center hidden z-10">
-                            <img id="image-preview-el" class="max-w-[80%] max-h-[80%] border border-surface2 shadow-lg" />
+                        <div id="editor-lines"
+                            class="w-10 bg-surface text-right pr-2 pt-4 text-sm font-mono text-gray-500 select-none hidden md:block leading-relaxed border-r border-surface2">
+                            1</div>
+                        <textarea id="code-editor"
+                            class="flex-1 bg-background text-gray-300 p-4 font-mono text-base md:text-sm resize-none outline-none whitespace-pre overflow-auto leading-relaxed"
+                            spellcheck="false" placeholder="// Select a file to edit..."></textarea>
+                        <div id="image-preview"
+                            class="absolute inset-0 bg-background flex items-center justify-center hidden z-10">
+                            <img id="image-preview-el"
+                                class="max-w-[80%] max-h-[80%] border border-surface2 shadow-lg" />
                         </div>
                     </div>
-
                     <!-- AI Assistant Bar -->
-                    <div class="h-auto min-h-[70px] border-t border-surface2 bg-surface p-3 flex flex-col gap-2 shrink-0">
+                    <div
+                        class="h-auto min-h-[70px] border-t border-surface2 bg-surface p-3 flex flex-col gap-2 shrink-0 pb-6 md:pb-3">
                         <div id="ai-status" class="text-[10px] text-primary hidden font-bold">AI is thinking...</div>
                         <div class="flex gap-2">
                             <div class="relative flex-1">
-                                <input id="ai-prompt" type="text" class="w-full bg-background border border-surface2 rounded-lg pl-4 pr-12 py-3 text-base md:text-sm focus:border-primary focus:outline-none text-white" placeholder="Ask AI to edit this file...">
-                                <button onclick="app.ai.generateCode()" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                <input id="ai-prompt" type="text"
+                                    class="w-full bg-background border border-surface2 rounded-lg pl-4 pr-12 py-3 text-base md:text-sm focus:border-primary focus:outline-none text-white placeholder-gray-500"
+                                    placeholder="Ask AI to edit this file...">
+                                <button onclick="app.ai.generateCode()"
+                                    class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -390,177 +629,70 @@
                 </div>
 
                 <!-- COLUMN 3: ICON GENERATOR -->
-                <div id="ws-col-icon" class="w-full md:w-80 bg-surface border-l border-surface2 flex-col md:flex hidden overflow-y-auto h-full">
+                <div id="ws-col-icon"
+                    class="w-full md:w-80 bg-surface border-l border-surface2 flex-col md:flex hidden overflow-y-auto h-full">
                     <div class="p-6 space-y-6">
-                        <div>
-                            <h3 class="font-bold text-white text-sm uppercase mb-2">Icon Generator</h3>
-                            <p class="text-xs text-gray-400 mb-4">Create a pixel-art style pack icon using AI.</p>
-                            <div class="space-y-3">
-                                <textarea id="icon-prompt" rows="3" class="w-full bg-background border border-surface2 rounded-lg p-3 text-base text-white focus:border-primary outline-none" placeholder="e.g. A glowing diamond sword"></textarea>
-                                <button onclick="app.ai.generateIcon()" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-lg text-sm transition-colors">Generate Icon</button>
-                            </div>
+                        <h3 class="font-bold text-white text-sm uppercase">Icon Generator</h3>
+                        <div class="space-y-3">
+                            <textarea id="icon-prompt" rows="3"
+                                class="w-full bg-background border border-surface2 rounded-lg p-3 text-base text-white focus:border-primary outline-none placeholder-gray-500"
+                                placeholder="e.g. A glowing diamond sword"></textarea>
+                            <button onclick="app.ai.generateIcon()"
+                                class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-lg text-sm">Generate
+                                Icon</button>
                         </div>
-                        
-                        <div>
-                            <h3 class="font-bold text-white text-sm uppercase mb-2">Preview</h3>
-                            <div class="aspect-square bg-background border border-surface2 rounded-xl flex items-center justify-center overflow-hidden relative group">
-                                <img id="icon-preview-img" class="w-full h-full object-cover hidden">
-                                <span id="icon-placeholder" class="text-xs text-gray-600">No Icon</span>
-                                <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    <span class="text-white text-xs font-bold">pack_icon.png</span>
-                                </div>
-                            </div>
+                        <div
+                            class="aspect-square bg-background border border-surface2 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                            <img id="icon-preview-img" class="w-full h-full object-cover hidden">
+                            <span id="icon-placeholder" class="text-xs text-gray-600">No Icon</span>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
-       <!-- VIEW: SETTINGS -->
-<div id="view-settings" class="view-section absolute inset-0 overflow-y-auto flex flex-col items-center justify-center p-4 hidden bg-black/80 backdrop-blur-sm z-50">
-    
-    <!-- Settings Card -->
-    <div class="w-full max-w-md bg-surface1 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
-        
-        <!-- Header Area -->
-        <div class="p-8 text-center border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
-            <div class="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-            </div>
-            <h2 class="text-2xl font-bold text-white mb-2">API Configuration</h2>
-            <p class="text-sm text-gray-400 leading-relaxed">
-                Your Google Gemini API Key is stored securely in your browser's 
-                <span class="text-gray-300 font-mono bg-black/30 px-1 rounded">localStorage</span>. 
-                It is never sent to our servers.
-            </p>
-        </div>
-
-        <!-- Controls Area -->
-        <div class="p-8 space-y-6">
-            
-            <!-- Status Indicator -->
-            <div class="bg-black/30 rounded-xl p-4 border border-white/5 flex items-center justify-between group">
-                <span class="text-sm font-medium text-gray-400">Connection Status</span>
-                <div id="api-status-display" class="flex items-center gap-2 text-sm font-mono font-bold text-red-400 bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20 transition-all">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                    Not Configured
+        <!-- VIEW: SETTINGS -->
+        <div id="view-settings"
+            class="view-section absolute inset-0 overflow-y-auto flex flex-col items-center justify-center p-4 hidden bg-black/80 backdrop-blur-sm z-50">
+            <div
+                class="w-full max-w-md bg-surface1 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
+                <div class="p-8 text-center border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
+                    <h2 class="text-2xl font-bold text-white mb-2">Settings</h2>
+                    <p class="text-sm text-gray-400">API Key Configuration</p>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="bg-black/30 rounded-xl p-4 border border-white/5 flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-400">Gemini API</span>
+                        <div id="api-status-display" class="text-sm font-mono font-bold text-red-400">Not Configured
+                        </div>
+                    </div>
+                    <button onclick="app.settings.setKey()"
+                        class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl">Set API
+                        Key</button>
+                    <button onclick="app.router.go('home')"
+                        class="w-full bg-surface border border-surface2 text-gray-300 py-3 rounded-xl">Back</button>
                 </div>
             </div>
-
-            <!-- Actions -->
-            <div class="space-y-3">
-                <button onclick="app.settings.setKey()" class="w-full group relative flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0 overflow-hidden">
-                    <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
-                    <span>Set / Update Key</span>
-                </button>
-
-                <button onclick="app.settings.clearKey()" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-red-500/10 text-gray-400 hover:text-red-400 border border-surface2 hover:border-red-500/30 font-semibold py-3.5 rounded-xl transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span>Remove Key</span>
-                </button>
-            </div>
         </div>
 
-        <!-- Close Button (Mobile Convenience) -->
-        <div class="bg-surface2/50 p-3 text-center border-t border-white/5">
-            <button onclick="document.getElementById('view-settings').classList.add('hidden')" class="text-xs text-gray-500 hover:text-white transition-colors underline decoration-dotted">
-                Close Settings
-            </button>
-        </div>
-    </div>
-</div>
-       <!-- VIEW: CREDITS -->
-<div id="view-credits" class="view-section absolute inset-0 overflow-y-auto flex flex-col items-center justify-center p-4 hidden bg-black/80 backdrop-blur-sm z-50">
-    
-    <!-- Credits Card -->
-    <div class="w-full max-w-md bg-surface1 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
-        
-        <!-- Header Area -->
-        <div class="p-8 text-center border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
-            <div class="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/20 transform hover:scale-110 transition-transform duration-500">
-               <!-- Code Icon -->
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-               </svg>
-            </div>
-            <h2 class="text-3xl font-black text-white mb-2 tracking-tight">JMAFK <span class="text-primary">AFK BH Maker</span></h2>
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface2 border border-white/10 text-xs font-medium text-gray-400">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                v2.1 Mobile Enhanced
-            </div>
-        </div>
+    </main>
 
-        <!-- Content Area -->
-        <div class="p-8 space-y-6">
-            
-            <!-- Developer Badge -->
-            <div class="bg-black/30 rounded-xl p-4 border border-white/5 flex flex-col items-center text-center group hover:border-primary/30 transition-colors">
-                <span class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-hover:text-primary transition-colors">Lead Developer</span>
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                    <span class="text-xl font-bold text-white tracking-wide">@JMAFK</span>
-                </div>
-            </div>
-
-            <!-- Social Buttons -->
-            <div class="space-y-3">
-                <!-- YouTube Button -->
-                <a href="https://www.youtube.com/@JMAFKBedrock" target="_blank" class="group w-full flex items-center justify-center gap-3 bg-[#FF0000] hover:bg-red-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-red-900/20 hover:-translate-y-1 active:scale-95">
-                    <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                    </svg>
-                    <span>Subscribe on YouTube</span>
-                </a>
-                
-                <!-- Discord Button -->
-                <a href="https://discord.gg/CtKukG3Jeu" target="_blank" class="w-full flex items-center justify-center gap-3 bg-[#5865F2] hover:bg-indigo-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-indigo-900/20 hover:-translate-y-1 active:scale-95">
-                    <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.5151.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.699.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419z"/>
-                    </svg>
-                    <span>Join Discord Server</span>
-                </a>
-            </div>
-            
-            <!-- Footer -->
-            <div class="text-center space-y-2 pt-4 border-t border-white/5">
-                 <button onclick="document.getElementById('view-credits').classList.add('hidden')" class="text-xs text-gray-500 hover:text-white transition-colors underline decoration-dotted">
-                    Close Credits
-                </button>
-                 <p class="text-[10px] text-gray-600">
-                    Not affiliated with Mojang Studios.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <!-- Footer -->
-    <footer class="bg-surface border-t border-surface2 p-3 text-center text-[10px] md:text-xs text-gray-500 shrink-0">
-        @JMAFK &copy; 2025 | Bedrock Behavior Pack Tool
-    </footer>
-
-    <!-- LOGIC -->
     <script type="module">
         import { GoogleGenAI } from "@google/genai";
 
-        // --- INITIAL CONFIG & STATE ---
+        // --- CONFIGURATION ---
+        // Change these to your actual repo details
+        const GITHUB_CONFIG = {
+            owner: 'JMAFK', // Replace with your username
+            repo: 'bedrock-hub-content', // Replace with your repo name
+            branch: 'main',
+            file: 'uploads.json'
+        };
+
         const STORAGE_KEY = 'jmafk_project_data_v2';
         const API_KEY_STORAGE = 'jmafk_api_key';
-        
+        const LIKES_STORAGE = 'jmafk_hub_likes';
+
         const DEFAULT_MANIFEST = {
             format_version: 2,
             header: {
@@ -575,91 +707,286 @@
                 { type: "script", uuid: crypto.randomUUID(), version: [1, 0, 0], entry: "scripts/main.js" }
             ],
             dependencies: [
-                { module_name: "@minecraft/server", version: "2.4.0-beta" },
-                { module_name: "@minecraft/server-ui", version: "2.1.0-beta" }
+                { module_name: "@minecraft/server", version: "1.12.0-beta" }, // Updated to newer beta
+                { module_name: "@minecraft/server-ui", version: "1.3.0-beta" }
             ]
         };
 
         const DEFAULT_SCRIPT = `import { world, system } from "@minecraft/server";\n\nworld.afterEvents.worldInitialize.subscribe(() => {\n    console.warn("Hello from JMAFK Maker!");\n});`;
 
-        // Main Application Object
         const app = {
             state: {
-                view: 'home',
-                files: [], // { path: string, content: string, isBinary: boolean }
+                view: 'hub', // Default view is now the Store/Hub
+                files: [],
                 config: JSON.parse(JSON.stringify(DEFAULT_MANIFEST)),
                 selectedFile: null,
-                mobileTab: 'files' // files, editor, icon
+                mobileTab: 'files',
+                hubData: [], // Stores fetched content
+                currentPost: null // Stores current post data
             },
 
-            // --- INIT ---
             init() {
                 this.persistence.load();
                 this.bindEvents();
-                
-                if (this.state.files.length > 0) {
-                    this.updateManifestUI();
-                } else {
+                this.hub.init(); // Initialize Store
+
+                if (this.state.files.length === 0) {
                     this.files.add('manifest.json', JSON.stringify(this.state.config, null, 2));
                     this.files.add('scripts/main.js', DEFAULT_SCRIPT);
                 }
-                
+
+                // If we were in a sub-view of Studio, ensure logic runs
+                if (this.state.view === 'workspace') {
+                    this.files.renderList();
+                }
+
                 this.router.render();
                 this.settings.checkStatus();
-                
-                window.onbeforeunload = () => "You have unsaved changes.";
             },
 
             bindEvents() {
-                const menu = document.getElementById('mobile-menu');
-                const overlay = document.getElementById('mobile-overlay');
-                const btn = document.getElementById('hamburger-btn');
-                const closeBtn = document.getElementById('close-menu-btn');
-                
+                // Menu Toggles
                 const toggleMenu = () => {
-                    const isOpen = !menu.classList.contains('menu-closed');
-                    if (isOpen) {
-                        menu.classList.add('menu-closed');
-                        menu.classList.remove('menu-open');
-                        overlay.classList.add('hidden');
-                    } else {
-                        menu.classList.remove('menu-closed');
-                        menu.classList.add('menu-open');
-                        overlay.classList.remove('hidden');
-                    }
-                };
-                
-                btn.onclick = toggleMenu;
-                closeBtn.onclick = toggleMenu;
-                overlay.onclick = toggleMenu;
+                    const menu = document.getElementById('mobile-menu');
+                    const overlay = document.getElementById('mobile-overlay');
+                    const isClosed = menu.classList.contains('menu-closed');
 
+                    menu.classList.toggle('menu-closed', !isClosed);
+                    menu.classList.toggle('menu-open', isClosed);
+                    overlay.classList.toggle('hidden', !isClosed);
+                };
+
+                document.getElementById('hamburger-btn').onclick = toggleMenu;
+                document.getElementById('close-menu-btn').onclick = toggleMenu;
+                document.getElementById('mobile-overlay').onclick = toggleMenu;
+
+                // Editor
                 const editor = document.getElementById('code-editor');
                 editor.addEventListener('input', (e) => {
-                    if (this.state.selectedFile) {
-                        this.files.update(this.state.selectedFile, e.target.value);
-                    }
+                    if (this.state.selectedFile) this.files.update(this.state.selectedFile, e.target.value);
                 });
-                
+
                 document.getElementById('import-file').addEventListener('change', (e) => this.import.handle(e));
+
+                // Drag & Drop Support with Visual Feedback
+                const body = document.body;
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    body.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        body.classList.add('dragging-over');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    body.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        body.classList.remove('dragging-over');
+                    }, false);
+                });
+
+                body.addEventListener('drop', (e) => {
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        this.import.processFile(e.dataTransfer.files[0]);
+                    }
+                }, false);
+            },
+
+            // --- HUB (STORE) LOGIC ---
+            hub: {
+                async init() {
+                    if (app.state.view === 'hub') {
+                        this.fetchContent();
+                    }
+                },
+                async fetchContent() {
+                    const grid = document.getElementById('hub-grid');
+                    const loading = document.getElementById('hub-loading');
+                    const errorDiv = document.getElementById('hub-error');
+
+                    if (!grid) return;
+
+                    grid.innerHTML = '';
+                    loading.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+
+                    try {
+                        // Fetch the single uploads.json file from GitHub Raw
+                        const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.file}`;
+                        const res = await fetch(url);
+
+                        if (!res.ok) {
+                            // Instead of throwing hard error, we render the default content
+                            throw new Error("GitHub Fetch Failed");
+                        }
+
+                        const items = await res.json();
+                        if (items.length > 0) {
+                            items.forEach(item => this.renderCard(grid, item));
+                        } else {
+                            throw new Error("Empty JSON");
+                        }
+
+                    } catch (e) {
+                        console.log("Using default/fallback content with custom images");
+                        // Render fallback content immediately if fetch fails (Demo Mode)
+                        const fallbackItems = [
+                            {
+                                "id": "server-essential-menu",
+                                "title": "Server Essential Menu",
+                                "author": "JMAFK",
+                                "type": "Addon",
+                                "thumbnail": "https://media.forgecdn.net/attachments/1372/348/1000085202-jpg.jpg",
+                                "description": "The ultimate menu system for Bedrock servers. Includes warps, TPA, and admin tools.",
+                                "long_description": "# Server Essential Menu\n\nThis addon provides a comprehensive GUI menu for your server or realm.\n\n## Features\n- **Teleport System:** Warp to hubs and custom locations.\n- **TPA:** Request to teleport to other players.\n- **Admin Tools:** Ban, kick, and manage the server easily.\n\n## Installation\n1. Download the pack.\n2. Import into Minecraft.\n3. Apply to your world.",
+                                "download_url": "https://www.curseforge.com/minecraft-bedrock/addons/server-essential-menu"
+                            },
+                            {
+                                "id": "casino-jmafkbedrock",
+                                "title": "Casino System [JMAFK]",
+                                "author": "JMAFK",
+                                "type": "Script",
+                                "thumbnail": "https://media.forgecdn.net/attachments/1372/653/clans-png.png",
+                                "description": "A fully functional economy and gambling script. Add slots and blackjack to your world.",
+                                "long_description": "# Casino JMAFK\n\nBring the excitement of a casino to your Bedrock world using the Script API.\n\n## Games Included\n- **Slot Machines:** Spin to win currency.\n- **Blackjack:** Play against the dealer.\n\n**Requires:** Beta APIs enabled.",
+                                "download_url": "https://www.curseforge.com/minecraft-bedrock/scripts/casino-jmafkbedrock"
+                            },
+                            {
+                                "id": "advance-land-claim",
+                                "title": "Advance Land Claim",
+                                "author": "JMAFK",
+                                "type": "Addon",
+                                "thumbnail": "https://media.forgecdn.net/attachments/1112/366/screenshot-2025-03-02-073331-png.png",
+                                "description": "Protect your builds! Advanced plot protection and land claiming for multiplayer.",
+                                "long_description": "# Advance Land Claim\n\nStop griefers instantly.\n\n## How to use\n1. Get the claiming tool.\n2. Select corner A and corner B.\n3. Type `/claim` to protect your area.\n\nIncludes permission sharing with friends!",
+                                "download_url": "https://www.curseforge.com/minecraft-bedrock/addons/advance-land-claim-plot-protection"
+                            },
+                            {
+                                "id": "proximity-chat",
+                                "title": "Below Name & Proximity Chat",
+                                "author": "JMAFK",
+                                "type": "Script",
+                                "thumbnail": "https://media.forgecdn.net/attachments/1381/415/screenshot-2025-11-04-195109-png.png",
+                                "description": "Immersive chat features. See messages below player names and chat based on distance.",
+                                "long_description": "# Proximity Chat Script\n\nEnhance roleplay with this script.\n\n## Features\n- **Below Name:** Chat messages appear instantly under the player's nametag.\n- **Proximity:** Only players within X blocks can see your chat.\n- **Config:** customizable radius.",
+                                "download_url": "https://www.curseforge.com/minecraft-bedrock/scripts/below-name-chat-proximity-chat-jmafk"
+                            }
+                        ];
+
+                        grid.innerHTML = '';
+                        fallbackItems.forEach(item => this.renderCard(grid, item));
+                    } finally {
+                        loading.classList.add('hidden');
+                    }
+                },
+
+                renderCard(container, item) {
+                    // Use the provided thumbnail URL or a placeholder
+                    const thumbUrl = item.thumbnail || 'https://via.placeholder.com/500x281?text=No+Image';
+
+                    const card = document.createElement('div');
+                    card.className = 'group bg-surface border border-surface2 rounded-xl overflow-hidden hover:border-primary transition-all hover:shadow-xl cursor-pointer flex flex-col h-full';
+                    card.onclick = () => app.hub.openPost(item);
+
+                    card.innerHTML = `
+                        <div class="aspect-video bg-surface2 relative overflow-hidden">
+                            <img src="${thumbUrl}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/500x281?text=Image+Error'">
+                            <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col">
+                            <h3 class="text-lg font-bold text-white mb-1 line-clamp-1">${item.title}</h3>
+                            <p class="text-xs text-gray-400 mb-3">by ${item.author || 'Unknown'}</p>
+                            <p class="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">${item.description || 'No description provided.'}</p>
+                            <button class="w-full bg-surface2 group-hover:bg-primary text-white font-bold py-2 rounded-lg transition-colors text-sm">View Details</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                },
+
+                openPost(item) {
+                    app.state.currentPost = item;
+                    app.router.go('post');
+
+                    // Populate Header
+                    document.getElementById('post-title').innerText = item.title;
+                    document.getElementById('post-author').innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> ${item.author || 'Unknown'}`;
+
+                    const thumbUrl = item.thumbnail || 'https://via.placeholder.com/500x281?text=No+Image';
+                    document.getElementById('post-thumb').src = thumbUrl;
+                    document.getElementById('post-banner').src = thumbUrl;
+
+                    // Type label
+                    const typeLabel = document.getElementById('post-type');
+                    if (item.type) {
+                        typeLabel.innerText = item.type;
+                        typeLabel.classList.remove('hidden');
+                    } else {
+                        typeLabel.classList.add('hidden');
+                    }
+
+                    // Configure Download Button (External Link)
+                    const btn = document.getElementById('post-download-btn');
+                    if (item.download_url) {
+                        btn.href = item.download_url;
+                        btn.classList.remove('opacity-50', 'pointer-events-none');
+                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg> Visit CurseForge / External`;
+                    } else {
+                        btn.href = '#';
+                        btn.classList.add('opacity-50', 'pointer-events-none');
+                        btn.innerText = "No Download Available";
+                    }
+
+                    // Like Logic
+                    this.updateLikeButton(item.id || item.title); // fallback to title if id missing
+
+                    // Render Description (Markdown support)
+                    const contentDiv = document.getElementById('post-content');
+                    // Prefer long_description, fallback to description
+                    const desc = item.long_description || item.description || "_No details provided._";
+                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(desc));
+                },
+
+                refresh() {
+                    this.fetchContent();
+                },
+
+                // Likes (LocalStorage simulation)
+                toggleLike() {
+                    const item = app.state.currentPost;
+                    if (!item) return;
+                    const id = item.id || item.title;
+
+                    const likes = JSON.parse(localStorage.getItem(LIKES_STORAGE) || '{}');
+                    likes[id] = !likes[id]; // Toggle
+                    localStorage.setItem(LIKES_STORAGE, JSON.stringify(likes));
+                    this.updateLikeButton(id);
+                },
+
+                updateLikeButton(id) {
+                    const likes = JSON.parse(localStorage.getItem(LIKES_STORAGE) || '{}');
+                    const isLiked = !!likes[id];
+                    const btn = document.getElementById('post-like-btn');
+                    const label = document.getElementById('post-like-count');
+
+                    if (isLiked) {
+                        btn.classList.remove('bg-surface2', 'hover:bg-surface1');
+                        btn.classList.add('bg-red-500', 'hover:bg-red-600', 'border-transparent');
+                        label.innerText = "Liked!";
+                    } else {
+                        btn.classList.add('bg-surface2', 'hover:bg-surface1');
+                        btn.classList.remove('bg-red-500', 'hover:bg-red-600', 'border-transparent');
+                        label.innerText = "Like";
+                    }
+                }
             },
 
             // --- PERSISTENCE ---
             persistence: {
                 save() {
-                    try {
-                        const data = {
-                            files: app.state.files,
-                            config: app.state.config,
-                            view: app.state.view
-                        };
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                        
-                        const indicator = document.getElementById('save-indicator');
-                        if(indicator) {
-                            indicator.classList.add('text-primary');
-                            setTimeout(() => indicator.classList.remove('text-primary'), 500);
-                        }
-                    } catch (e) { console.error("Save failed", e); }
+                    const data = { files: app.state.files, config: app.state.config }; // Don't persist 'view' so user lands on Hub
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
                 },
                 load() {
                     const raw = localStorage.getItem(STORAGE_KEY);
@@ -668,8 +995,8 @@
                             const data = JSON.parse(raw);
                             app.state.files = data.files || [];
                             app.state.config = data.config || DEFAULT_MANIFEST;
-                            if(!app.state.config.dependencies) app.state.config.dependencies = [];
-                        } catch (e) { console.error("Load failed", e); }
+                            if (!app.state.config.dependencies) app.state.config.dependencies = [];
+                        } catch (e) { console.error(e); }
                     }
                 }
             },
@@ -678,52 +1005,64 @@
             router: {
                 go(viewName) {
                     app.state.view = viewName;
-                    app.router.render();
-                    
-                    document.getElementById('mobile-menu').classList.add('menu-closed');
-                    document.getElementById('mobile-menu').classList.remove('menu-open');
-                    document.getElementById('mobile-overlay').classList.add('hidden');
-                    
-                    if (viewName === 'manifest') {
-                        app.manifest.renderDependencies();
+                    this.render();
+
+                    // Update Nav Active States
+                    document.getElementById('nav-hub').className = viewName === 'hub'
+                        ? "px-4 py-1.5 rounded-md text-sm font-bold transition-all text-white bg-surface2 shadow-sm"
+                        : "px-4 py-1.5 rounded-md text-sm font-bold transition-all text-gray-400 hover:text-white";
+
+                    document.getElementById('nav-studio').className = ['home', 'manifest', 'workspace', 'settings'].includes(viewName)
+                        ? "px-4 py-1.5 rounded-md text-sm font-bold transition-all text-white bg-surface2 shadow-sm"
+                        : "px-4 py-1.5 rounded-md text-sm font-bold transition-all text-gray-400 hover:text-white";
+
+                    // Close Mobile Menu
+                    const menu = document.getElementById('mobile-menu');
+                    if (!menu.classList.contains('menu-closed')) {
+                        menu.classList.add('menu-closed');
+                        menu.classList.remove('menu-open');
+                        document.getElementById('mobile-overlay').classList.add('hidden');
                     }
                 },
                 render() {
                     document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
                     const active = document.getElementById(`view-${app.state.view}`);
-                    if (active) active.classList.remove('hidden');
-                    
+                    if (active) {
+                        active.classList.remove('hidden');
+                        // Re-trigger Hub fetch if navigating back
+                        if (app.state.view === 'hub') app.hub.fetchContent();
+                    }
+
+                    if (app.state.view === 'manifest') app.manifest.renderDependencies();
                     if (app.state.view === 'workspace') {
                         app.workspace.renderMobileTabs();
                         app.files.renderList();
-                        if (!app.state.selectedFile && app.state.files.length > 0) {
-                             // Try to find main.js or first file
-                            const main = app.state.files.find(f => f.path.includes('main.js')) || app.state.files[0];
-                            app.files.select(main.path);
-                        }
                     }
+
+                    app.persistence.save();
                 }
             },
 
-            // --- WORKSPACE LOGIC ---
             workspace: {
                 switchTab(tab) {
                     app.state.mobileTab = tab;
                     this.renderMobileTabs();
                 },
                 renderMobileTabs() {
+                    const isMobile = window.innerWidth < 768;
                     ['files', 'editor', 'icon'].forEach(t => {
                         const btn = document.getElementById(`tab-btn-${t}`);
-                        if (t === app.state.mobileTab) {
-                            btn.classList.remove('text-gray-400', 'bg-transparent');
-                            btn.classList.add('bg-primary', 'text-white');
-                        } else {
-                            btn.classList.add('text-gray-400', 'bg-transparent');
-                            btn.classList.remove('bg-primary', 'text-white');
+                        if (btn) {
+                            if (t === app.state.mobileTab) {
+                                btn.classList.remove('text-gray-400', 'bg-transparent');
+                                btn.classList.add('bg-primary', 'text-white');
+                            } else {
+                                btn.classList.add('text-gray-400', 'bg-transparent');
+                                btn.classList.remove('bg-primary', 'text-white');
+                            }
                         }
                     });
 
-                    const isMobile = window.innerWidth < 768;
                     const colFiles = document.getElementById('ws-col-files');
                     const colEditor = document.getElementById('ws-col-editor');
                     const colIcon = document.getElementById('ws-col-icon');
@@ -745,7 +1084,6 @@
                 }
             },
 
-            // --- FILE SYSTEM ---
             files: {
                 add(path, content, isBinary = false) {
                     const existing = app.state.files.find(f => f.path === path);
@@ -771,18 +1109,51 @@
                         if (app.state.selectedFile === path) {
                             app.state.selectedFile = null;
                             document.getElementById('code-editor').value = '';
+                            document.getElementById('current-file-label').innerText = 'No file selected';
                         }
                         app.persistence.save();
                         this.renderList();
                     }
                 },
+                rename(oldPath) {
+                    const newPath = prompt("Rename file:", oldPath);
+                    if (newPath && newPath !== oldPath) {
+                        const existing = app.state.files.find(f => f.path === newPath);
+                        if (existing) return alert("File already exists!");
+
+                        const file = app.state.files.find(f => f.path === oldPath);
+                        if (file) {
+                            file.path = newPath;
+                            // Folder rename logic check
+                            const oldDir = oldPath.substring(0, oldPath.lastIndexOf('/'));
+                            const newDir = newPath.substring(0, newPath.lastIndexOf('/'));
+
+                            if (oldDir && newDir && oldDir !== newDir) {
+                                if (confirm(`You changed the folder from '${oldDir}' to '${newDir}'. Move all other files in this folder too?`)) {
+                                    app.state.files.forEach(f => {
+                                        if (f.path.startsWith(oldDir + '/')) {
+                                            f.path = f.path.replace(oldDir, newDir);
+                                        }
+                                    });
+                                }
+                            }
+
+                            if (app.state.selectedFile === oldPath) {
+                                app.state.selectedFile = newPath;
+                                document.getElementById('current-file-label').innerText = newPath;
+                            }
+                            app.persistence.save();
+                            this.renderList();
+                        }
+                    }
+                },
                 select(path) {
                     const file = app.state.files.find(f => f.path === path);
                     if (!file) return;
-                    
+
                     app.state.selectedFile = path;
                     document.getElementById('current-file-label').innerText = path;
-                    
+
                     const editor = document.getElementById('code-editor');
                     const imgPreview = document.getElementById('image-preview');
                     const imgEl = document.getElementById('image-preview-el');
@@ -797,99 +1168,173 @@
                         imgPreview.classList.add('hidden');
                         editor.classList.remove('hidden');
                         editor.value = file.content;
-                        // Simple line count
                         const lines = file.content.split('\n').length;
-                        document.getElementById('editor-lines').innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('<br>');
+                        document.getElementById('editor-lines').innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
                     }
 
                     this.renderList();
-                    
+
                     if (window.innerWidth < 768) {
                         app.workspace.switchTab('editor');
                     }
                 },
                 createFilePrompt() {
                     const name = prompt("Enter file path (e.g. scripts/utils.js):");
-                    if (name) this.add(name, '// New file');
+                    if (name) {
+                        this.add(name, '// New file');
+                        this.select(name);
+                    }
                 },
                 renderList() {
                     const container = document.getElementById('file-list');
                     container.innerHTML = '';
-                    
-                    app.state.files.sort((a,b) => a.path.localeCompare(b.path)).forEach(file => {
-                        const div = document.createElement('div');
-                        const isSelected = app.state.selectedFile === file.path;
-                        
-                        div.className = `flex items-center justify-between p-3 md:p-2 rounded-lg text-sm cursor-pointer transition-colors mb-1 ${isSelected ? 'bg-surface2 text-white border-l-4 border-primary' : 'text-gray-400 hover:bg-surface2'}`;
-                        
-                        let icon = '📄';
-                        if(file.path.endsWith('.js')) icon = '📜';
-                        if(file.path.endsWith('.json')) icon = '🔧';
-                        if(file.path.endsWith('.png')) icon = '🖼️';
 
-                        div.innerHTML = `
-                            <div class="flex items-center gap-3 overflow-hidden flex-1" onclick="app.files.select('${file.path}')">
-                                <span>${icon}</span>
-                                <span class="truncate font-medium">${file.path}</span>
-                            </div>
-                            <button class="text-gray-500 hover:text-red-400 px-2 py-1" onclick="app.files.delete('${file.path}')">×</button>
-                        `;
-                        container.appendChild(div);
-                    });
-                    
-                    const iconFile = app.state.files.find(f => f.path === 'pack_icon.png');
-                    const iconPreview = document.getElementById('icon-preview-img');
-                    const placeholder = document.getElementById('icon-placeholder');
-                    if (iconFile) {
-                        iconPreview.src = `data:image/png;base64,${iconFile.content}`;
-                        iconPreview.classList.remove('hidden');
-                        placeholder.classList.add('hidden');
+                    // Ensure expandedPaths exists
+                    if (!app.state.expandedPaths) app.state.expandedPaths = new Set();
+
+                    const tree = this.buildTree(app.state.files);
+                    this.renderTreeRecursive(container, tree, 0, '');
+                },
+
+                toggleFolder(path) {
+                    if (app.state.expandedPaths.has(path)) {
+                        app.state.expandedPaths.delete(path);
                     } else {
-                        iconPreview.classList.add('hidden');
-                        placeholder.classList.remove('hidden');
+                        app.state.expandedPaths.add(path);
                     }
+                    this.renderList();
+                },
+
+                buildTree(files) {
+                    const root = {};
+                    files.forEach(file => {
+                        const parts = file.path.split('/');
+                        let current = root;
+                        parts.forEach((part, index) => {
+                            if (index === parts.length - 1) {
+                                current[part] = { type: 'file', data: file, name: part };
+                            } else {
+                                if (!current[part]) current[part] = { type: 'folder', name: part, children: {} };
+                                current = current[part].children;
+                            }
+                        });
+                    });
+                    return root;
+                },
+
+                renderTreeRecursive(container, nodes, depth, currentPath) {
+                    const keys = Object.keys(nodes).sort((a, b) => {
+                        const typeA = nodes[a].type;
+                        const typeB = nodes[b].type;
+                        if (typeA !== typeB) return typeA === 'folder' ? -1 : 1;
+                        return a.localeCompare(b);
+                    });
+
+                    keys.forEach(key => {
+                        const node = nodes[key];
+                        const nodePath = currentPath ? `${currentPath}/${node.name}` : node.name;
+
+                        if (node.type === 'folder') {
+                            const isExpanded = app.state.expandedPaths.has(nodePath);
+                            const folderDiv = document.createElement('div');
+                            folderDiv.className = 'mb-0.5';
+                            const padding = depth * 12 + 8;
+
+                            folderDiv.innerHTML = `
+                                <div class="flex items-center gap-2 py-1 pr-2 text-gray-400 select-none cursor-pointer hover:text-white transition-colors" 
+                                     style="padding-left: ${padding}px"
+                                     onclick="app.files.toggleFolder('${nodePath}')">
+                                    <span class="text-xs transform transition-transform ${isExpanded ? 'rotate-90' : ''}">▶</span>
+                                    <span class="text-yellow-400 text-xs">📁</span>
+                                    <span class="font-bold text-xs uppercase tracking-wider">${node.name}</span>
+                                </div>
+                            `;
+                            container.appendChild(folderDiv);
+
+                            if (isExpanded) {
+                                const childrenDiv = document.createElement('div');
+                                folderDiv.appendChild(childrenDiv);
+                                this.renderTreeRecursive(childrenDiv, node.children, depth + 1, nodePath);
+                            }
+                        } else {
+                            const file = node.data;
+                            const isSelected = app.state.selectedFile === file.path;
+                            const div = document.createElement('div');
+                            const padding = depth * 12 + 8;
+
+                            div.className = `flex items-center justify-between py-2 pr-2 rounded-r-lg text-sm transition-colors mb-0.5 group cursor-pointer ${isSelected ? 'bg-surface2 text-white border-l-2 border-primary' : 'text-gray-400 hover:bg-surface2 hover:text-white border-l-2 border-transparent'}`;
+                            div.style.paddingLeft = `${padding}px`;
+
+                            let icon = '📄';
+                            if (file.path.endsWith('.js')) icon = '📜';
+                            if (file.path.endsWith('.json')) icon = '🔧';
+                            if (file.path.endsWith('.png')) icon = '🖼️';
+
+                            const clickAction = isSelected
+                                ? `app.files.rename('${file.path}')`
+                                : `app.files.select('${file.path}')`;
+
+                            // Add arrow for nested files
+                            const arrow = depth > 0 ? '<span class="text-gray-600 mr-1 text-[10px]">➥</span>' : '';
+
+                            div.innerHTML = `
+                                <div class="flex items-center gap-2 overflow-hidden flex-1" onclick="${clickAction}">
+                                    ${arrow}
+                                    <span class="text-base opacity-80">${icon}</span>
+                                    <span class="truncate font-medium select-none" title="${isSelected ? 'Click again to rename' : ''}">${node.name}</span>
+                                </div>
+                                <button class="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity px-1" onclick="app.files.delete('${file.path}')">×</button>
+                            `;
+                            container.appendChild(div);
+                        }
+                    });
                 }
             },
 
-            // --- MANIFEST & DEPENDENCIES ---
             manifest: {
                 renderDependencies() {
                     const container = document.getElementById('m-dependencies-list');
-                    if(!container) return;
+                    if (!container) return;
                     container.innerHTML = '';
-                    
-                    // Ensure dependencies array exists
+
                     if (!app.state.config.dependencies) app.state.config.dependencies = [];
 
                     app.state.config.dependencies.forEach((dep, index) => {
                         const div = document.createElement('div');
-                        div.className = 'flex gap-2 items-center bg-background p-2 rounded border border-surface2';
+                        div.className = 'bg-surface2/30 p-3 rounded-lg border border-surface2/50';
                         div.innerHTML = `
-                            <div class="flex-1">
-                                <label class="text-[10px] text-gray-500 uppercase font-bold">Module</label>
-                                <input type="text" class="w-full bg-transparent text-white text-sm outline-none border-b border-transparent focus:border-primary" value="${dep.module_name}" onchange="app.manifest.updateDep(${index}, 'module_name', this.value)">
+                            <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                                <div class="flex-1">
+                                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Module</label>
+                                    <input type="text" class="w-full bg-background text-gray-200 text-base p-2 rounded border border-surface2 focus:border-primary outline-none" value="${dep.module_name}" onchange="app.manifest.updateDep(${index}, 'module_name', this.value)">
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="flex-1 sm:w-32">
+                                        <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Version</label>
+                                        <input type="text" class="w-full bg-background text-gray-200 text-base p-2 rounded border border-surface2 focus:border-primary outline-none" value="${dep.version}" onchange="app.manifest.updateDep(${index}, 'version', this.value)">
+                                    </div>
+                                    <button onclick="app.manifest.removeDep(${index})" class="self-end mb-[1px] p-2 text-gray-400 hover:text-red-400 bg-surface rounded border border-surface2 h-[42px] w-[42px] flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="w-24">
-                                <label class="text-[10px] text-gray-500 uppercase font-bold">Version</label>
-                                <input type="text" class="w-full bg-transparent text-white text-sm outline-none border-b border-transparent focus:border-primary" value="${dep.version}" onchange="app.manifest.updateDep(${index}, 'version', this.value)">
-                            </div>
-                            <button onclick="app.manifest.removeDep(${index})" class="text-gray-500 hover:text-red-400 p-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
                         `;
                         container.appendChild(div);
                     });
                 },
                 addDependency() {
-                    app.state.config.dependencies.push({ module_name: "@minecraft/server", version: "1.0.0" });
+                    app.state.config.dependencies.push({ module_name: "@minecraft/server", version: "1.12.0-beta" });
                     this.renderDependencies();
+                    app.persistence.save();
                 },
                 removeDep(index) {
                     app.state.config.dependencies.splice(index, 1);
                     this.renderDependencies();
+                    app.persistence.save();
                 },
                 updateDep(index, key, value) {
                     app.state.config.dependencies[index][key] = value;
+                    app.persistence.save();
                 }
             },
 
@@ -900,33 +1345,18 @@
                 const version = document.getElementById('m-version').value.split('.').map(Number);
                 const engine = document.getElementById('m-engine').value.split('.').map(Number);
 
-                const manifest = { ...app.state.config }; // start with existing config to keep dependencies
+                const manifest = { ...app.state.config };
                 manifest.header.name = name;
                 manifest.header.description = desc;
                 manifest.header.version = version;
                 manifest.header.min_engine_version = engine;
                 manifest.modules.forEach(m => m.version = version);
-                
-                // Dependencies are already in app.state.config.dependencies from the inputs
 
                 app.state.config = manifest;
                 app.files.add('manifest.json', JSON.stringify(manifest, null, 2));
                 app.router.go('workspace');
             },
-            
-            updateManifestUI() {
-                const m = app.state.config;
-                if(!m) return;
-                document.getElementById('m-name').value = m.header.name;
-                document.getElementById('m-desc').value = m.header.description;
-                document.getElementById('m-version').value = m.header.version.join('.');
-                document.getElementById('m-engine').value = m.header.min_engine_version.join('.');
-                
-                // Author isn't in manifest standard spec usually, but we can try to load if we stored it
-                // document.getElementById('m-author').value = ...
-            },
 
-            // --- AI FEATURES ---
             ai: {
                 async getClient() {
                     let key = localStorage.getItem(API_KEY_STORAGE);
@@ -947,24 +1377,57 @@
                     const promptText = promptInput.value.trim();
                     if (!promptText) return;
 
+                    let interval;
+
                     try {
                         status.classList.remove('hidden');
-                        status.innerText = "Sending to Gemini...";
-                        
-                        const ai = await this.getClient();
+
                         const currentFile = app.state.selectedFile;
                         const content = app.state.files.find(f => f.path === currentFile)?.content || "";
+                        const action = content.trim().length > 0 ? "Editing" : "Creating";
+                        const startTime = Date.now();
+
+                        // Animation Loop
+                        interval = setInterval(() => {
+                            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                            const frame = Math.floor((Date.now() - startTime) / 100) % 10;
+                            const bars = '❚'.repeat(frame + 1);
+                            status.innerHTML = `Gemini is ${action} a file <span class="text-accent">${bars}</span> ${elapsed}s`;
+                        }, 100);
+
+                        const ai = await this.getClient();
+
+                        // Handle @ mentions for extra context
+                        let contextFiles = `Target File: ${currentFile || "None"}\nContent:\n${content}`;
+                        const mentions = promptText.match(/@([a-zA-Z0-9_./-]+)/g);
+                        if (mentions) {
+                            mentions.forEach(m => {
+                                const fname = m.substring(1);
+                                // Try exact match first, then fuzzy match (ends with)
+                                const f = app.state.files.find(x => x.path === fname) ||
+                                    app.state.files.find(x => x.path.endsWith(fname) || x.path.endsWith('/' + fname));
+
+                                if (f && f.path !== currentFile) {
+                                    console.log(`Found context for ${fname}: ${f.path}`);
+                                    contextFiles += `\n\nReferenced File: ${f.path}\nContent:\n${f.content}`;
+                                } else {
+                                    console.warn(`Could not find file for mention: ${fname}`);
+                                }
+                            });
+                        }
 
                         const systemPrompt = `
                         You are a Minecraft Bedrock expert. 
-                        Modify the following file content based on the user request.
-                        File: ${currentFile}
-                        Content:
-                        ${content}
+                        
+                        ${contextFiles}
                         
                         User Request: ${promptText}
                         
-                        RETURN ONLY THE NEW CODE. NO MARKDOWN. NO EXPLANATION.
+                        Instructions:
+                        1. If modifying the Target File, return ONLY the new code.
+                        2. If creating a NEW file (or if Target File is None), start the response with ">>> CREATE: path/to/file" on the first line, followed by the code on new lines.
+                        
+                        NO MARKDOWN. NO EXPLANATION.
                         `;
 
                         const response = await ai.models.generateContent({
@@ -972,10 +1435,26 @@
                             contents: systemPrompt
                         });
 
-                        const newCode = response.text.trim();
-                        app.files.update(currentFile, newCode);
-                        app.files.select(currentFile);
-                        
+                        let newCode = response.text.trim();
+                        let targetPath = currentFile;
+
+                        // Check for CREATE directive
+                        const createMatch = newCode.match(/^>>> CREATE: (.+)$/m);
+                        if (createMatch) {
+                            targetPath = createMatch[1].trim();
+                            newCode = newCode.replace(createMatch[0], '').trim();
+
+                            // Add the new file
+                            app.files.add(targetPath, newCode);
+                            app.files.select(targetPath);
+                        } else if (targetPath) {
+                            // Update existing file
+                            app.files.update(targetPath, newCode);
+                            app.files.select(targetPath);
+                        } else {
+                            throw new Error("No file selected and AI did not specify a new file path.");
+                        }
+
                         promptInput.value = '';
                         status.innerText = "Done!";
                         setTimeout(() => status.classList.add('hidden'), 2000);
@@ -983,13 +1462,14 @@
                     } catch (e) {
                         console.error(e);
                         status.innerText = "Error: " + e.message;
+                    } finally {
+                        if (interval) clearInterval(interval);
                     }
                 },
 
                 async generateIcon() {
                     const prompt = document.getElementById('icon-prompt').value;
                     if (!prompt) return alert("Enter a prompt!");
-                    
                     const btn = document.querySelector('#ws-col-icon button');
                     const originalText = btn.innerText;
                     btn.innerText = "Generating...";
@@ -998,10 +1478,8 @@
                     try {
                         const enhancedPrompt = encodeURIComponent(`${prompt}, pixel art, minecraft style icon, 8bit, flat design`);
                         const url = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=512&height=512&nologo=true`;
-                        
                         const res = await fetch(url);
                         const blob = await res.blob();
-                        
                         const reader = new FileReader();
                         reader.readAsDataURL(blob);
                         reader.onloadend = () => {
@@ -1018,7 +1496,6 @@
                 }
             },
 
-            // --- SETTINGS ---
             settings: {
                 setKey() {
                     const k = prompt("Enter your Gemini API Key:");
@@ -1027,106 +1504,78 @@
                         this.checkStatus();
                     }
                 },
-                clearKey() {
-                    if(confirm("Clear API Key?")) {
-                        localStorage.removeItem(API_KEY_STORAGE);
-                        this.checkStatus();
-                    }
-                },
                 checkStatus() {
                     const hasKey = !!localStorage.getItem(API_KEY_STORAGE);
                     const el = document.getElementById('api-status-display');
                     if (el) {
                         el.innerText = hasKey ? "Active (Saved Locally)" : "Not Configured";
-                        el.className = `text-sm font-mono p-3 bg-background rounded border border-surface2 ${hasKey ? 'text-primary' : 'text-red-400'}`;
+                        el.className = `text-sm font-mono font-bold ${hasKey ? 'text-primary' : 'text-red-400'}`;
                     }
                 }
             },
 
-            // --- IMPORT / EXPORT ---
             export: {
                 async createZip() {
                     const zip = new JSZip();
                     app.state.files.forEach(f => {
-                        if (f.isBinary) zip.file(f.path, f.content, {base64: true});
+                        if (f.isBinary) zip.file(f.path, f.content, { base64: true });
                         else zip.file(f.path, f.content);
                     });
-                    return await zip.generateAsync({type: 'blob'});
+                    return await zip.generateAsync({ type: 'blob' });
                 },
                 async zip() {
                     const blob = await this.createZip();
-                    this.download(blob, `${this.getSafeName()}.zip`);
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `${(app.state.config.header.name || "pack").replace(/[^a-z0-9]/gi, '_')}.zip`;
+                    a.click();
                 },
                 async mcpack() {
                     const blob = await this.createZip();
-                    this.download(blob, `${this.getSafeName()}.mcpack`);
-                },
-                getSafeName() {
-                    return (app.state.config.header.name || "pack").replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                },
-                download(blob, filename) {
                     const a = document.createElement('a');
                     a.href = URL.createObjectURL(blob);
-                    a.download = filename;
-                    document.body.appendChild(a);
+                    a.download = `${(app.state.config.header.name || "pack").replace(/[^a-z0-9]/gi, '_')}.mcpack`;
                     a.click();
-                    document.body.removeChild(a);
                 }
             },
-            
+
             import: {
                 async handle(e) {
                     const file = e.target.files[0];
-                    if(!file) return;
-                    
+                    if (file) await this.processFile(file);
+                    e.target.value = '';
+                },
+
+                async processFile(file) {
                     try {
                         const zip = await JSZip.loadAsync(file);
                         const newFiles = [];
                         let config = null;
-
-                        const entries = Object.keys(zip.files);
-                        for (const filename of entries) {
+                        for (const filename of Object.keys(zip.files)) {
                             if (zip.files[filename].dir) continue;
-                            
                             const isBinary = /\.(png|jpg|jpeg|tga|fsb|bin)$/i.test(filename);
-                            const content = isBinary 
-                                ? await zip.files[filename].async('base64')
-                                : await zip.files[filename].async('string');
-                                
+                            const content = isBinary ? await zip.files[filename].async('base64') : await zip.files[filename].async('string');
                             newFiles.push({ path: filename, content, isBinary });
-                            
-                            if (filename.includes('manifest.json')) {
-                                try { config = JSON.parse(content); } catch(e){}
-                            }
+                            if (filename.includes('manifest.json')) try { config = JSON.parse(content); } catch (e) { }
                         }
-
                         app.state.files = newFiles;
-                        if (config) {
-                             app.state.config = config;
-                             // Ensure deps structure if missing
-                             if(!app.state.config.dependencies) app.state.config.dependencies = [];
-                        }
-                        
+                        if (config) app.state.config = config;
                         app.persistence.save();
                         app.router.go('workspace');
-                        
+                        // Force refresh file list
+                        app.files.renderList();
                         alert("Project Imported Successfully!");
-                        
-                    } catch (err) {
-                        alert("Import failed: " + err.message);
-                    }
-                    e.target.value = '';
+                    } catch (err) { alert("Import failed: " + err.message); }
                 }
             }
         };
 
         window.app = app;
         app.init();
-        
         window.addEventListener('resize', () => {
             if (app.state.view === 'workspace') app.workspace.renderMobileTabs();
         });
-
     </script>
 </body>
+
 </html>
