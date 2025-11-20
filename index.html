@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,70 +100,83 @@
 
     <main class="flex-grow flex flex-col md:flex-row h-full overflow-hidden relative">
         <!-- Sidebar / Drawer -->
-        <aside id="sidebar" class="hidden fixed inset-0 z-40 w-full bg-background flex-col md:flex md:static md:w-72 lg:w-80 md:border-r border-subtle overflow-hidden">
+        <aside id="sidebar" class="hidden fixed inset-0 z-40 w-full bg-background flex-col md:flex md:static md:w-72 lg:w-80 md:border-r border-subtle overflow-hidden shadow-2xl md:shadow-none">
             
-            <!-- Mobile Sidebar Header -->
-            <div class="md:hidden p-4 border-b border-subtle flex justify-between items-center bg-surface shrink-0">
-                <span class="font-bold text-white">Project Explorer</span>
-                <button id="close-sidebar-btn" class="text-gray-400 hover:text-white p-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- Sidebar Tabs Header -->
+            <div class="flex border-b border-subtle bg-surface shrink-0">
+                <button id="tab-explorer" class="flex-1 py-3 text-sm font-bold text-primary border-b-2 border-primary transition-colors hover:bg-subtle">
+                    Explorer
+                </button>
+                <button id="tab-settings" class="flex-1 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-colors hover:bg-subtle hover:text-gray-200">
+                    Settings
+                </button>
+                 <button id="close-sidebar-btn" class="md:hidden px-4 text-gray-400 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <!-- File Tree -->
-            <div class="flex-1 flex flex-col overflow-hidden min-h-[40%] border-b border-subtle bg-[#111827] md:bg-background">
-                 <div class="px-4 py-3 md:px-3 md:py-2 font-bold text-xs text-muted uppercase tracking-wider flex justify-between items-center bg-surface shrink-0">
-                    <span>Files</span>
-                    <button id="refresh-files" class="text-[10px] hover:text-white p-1" title="Refresh File List">REFRESH</button>
+            <!-- Tab Content Container -->
+            <div class="flex-1 overflow-hidden relative bg-[#111827]">
+                
+                <!-- EXPLORER TAB -->
+                <div id="panel-explorer" class="absolute inset-0 flex flex-col overflow-hidden">
+                    <div class="px-4 py-2 bg-surface border-b border-subtle flex justify-between items-center shrink-0">
+                        <span class="text-xs font-bold text-muted uppercase tracking-wider">Project Files</span>
+                        <button id="refresh-files" class="text-xs text-primary hover:text-primary-hover p-1" title="Refresh File List">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        </button>
+                    </div>
+                    <div id="file-tree" class="flex-1 overflow-y-auto py-2 select-none custom-scrollbar"></div>
                 </div>
-                <div id="file-tree" class="flex-1 overflow-y-auto py-2 select-none"></div>
-            </div>
-            
-            <!-- Configurator (Scrollable) -->
-             <div class="flex-1 overflow-y-auto p-4 bg-[#1a2330]">
-                <h2 class="text-lg md:text-xl font-bold text-white mb-4 sticky top-0 bg-[#1a2330] py-2 z-10">Settings</h2>
-                <div class="space-y-4 pb-20 md:pb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Pack Name</label>
-                        <input id="conf-name" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                        <textarea id="conf-desc" rows="3" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200 resize-y"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Author</label>
-                        <input id="conf-author" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Version</label>
-                            <input id="conf-version" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200" placeholder="1.0.0">
+                
+                <!-- SETTINGS TAB -->
+                <div id="panel-settings" class="hidden absolute inset-0 flex flex-col overflow-y-auto bg-[#1a2330] custom-scrollbar">
+                    <div class="p-4 space-y-4 pb-20">
+                         <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Pack Name</label>
+                            <input id="conf-name" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">Min Engine</label>
-                            <input id="conf-engine" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200" placeholder="1.21.0">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                            <textarea id="conf-desc" rows="3" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200 resize-y"></textarea>
                         </div>
-                    </div>
-                    
-                    <div class="pt-2">
-                         <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-bold text-gray-300">Dependencies</label>
-                         </div>
-                         <div id="dependencies-list" class="space-y-2"></div>
-                         <button id="add-dep-btn" class="w-full mt-2 bg-subtle text-gray-300 text-sm py-2 md:py-1 px-2 rounded hover:bg-muted transition-colors">+ Add Dependency</button>
-                    </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Author</label>
+                            <input id="conf-author" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Version</label>
+                                <input id="conf-version" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200" placeholder="1.0.0">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Min Engine</label>
+                                <input id="conf-engine" class="w-full p-2.5 md:p-2 text-base md:text-sm bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200" placeholder="1.21.0">
+                            </div>
+                        </div>
+                        
+                        <div class="pt-2">
+                             <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-bold text-gray-300">Dependencies</label>
+                             </div>
+                             <div id="dependencies-list" class="space-y-2"></div>
+                             <button id="add-dep-btn" class="w-full mt-2 bg-subtle text-gray-300 text-sm py-2 px-2 rounded hover:bg-muted transition-colors border border-dashed border-gray-600 hover:border-gray-400">+ Add Dependency</button>
+                        </div>
 
-                    <div class="pt-4 border-t border-subtle">
-                        <button id="save-config-btn" class="w-full bg-primary text-white font-bold py-3 md:py-2 px-4 rounded-lg hover:bg-primary-hover transition-colors">Save Config</button>
-                    </div>
-                    
-                    <div class="pt-4 border-t border-subtle">
-                         <button id="reset-api-key" class="w-full bg-red-900/30 border border-red-900 text-red-200 text-xs py-2 md:py-1 px-2 rounded hover:bg-red-900/50 transition-colors">Reset API Key</button>
+                        <div class="pt-4 border-t border-subtle">
+                            <button id="save-config-btn" class="w-full bg-primary text-white font-bold py-3 md:py-2 px-4 rounded-lg hover:bg-primary-hover transition-colors shadow-lg">Save Config</button>
+                            <p class="text-xs text-gray-500 mt-2 text-center">Saves metadata to manifest.json</p>
+                        </div>
+                        
+                        <div class="pt-4 border-t border-subtle mt-4 space-y-2">
+                             <button id="select-api-key" class="w-full bg-primary/10 border border-primary/50 text-primary text-xs py-2 px-2 rounded hover:bg-primary/20 transition-colors">Select / Change API Key</button>
+                             <button id="reset-api-key" class="w-full bg-red-900/20 border border-red-900/50 text-red-300 text-xs py-2 px-2 rounded hover:bg-red-900/40 transition-colors">Reset Key State</button>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </aside>
         
@@ -180,15 +192,15 @@
              <div id="view-editor" class="flex-1 flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-hidden">
                  
                  <!-- Code Area -->
-                 <div class="flex-1 flex flex-col relative rounded-lg border border-subtle bg-surface overflow-hidden h-full">
-                    <div class="bg-surface border-b border-subtle px-4 py-2 text-xs text-muted font-mono flex justify-between shrink-0">
-                        <span id="editor-filename" class="truncate max-w-[200px]">No file selected</span>
-                        <span id="editor-stats" class="whitespace-nowrap ml-2">0 chars</span>
+                 <div class="flex-1 flex flex-col relative rounded-lg border border-subtle bg-surface overflow-hidden h-full shadow-inner">
+                    <div class="bg-surface border-b border-subtle px-4 py-2 text-xs text-muted font-mono flex justify-between items-center shrink-0">
+                        <span id="editor-filename" class="truncate max-w-[200px] text-gray-300">No file selected</span>
+                        <span id="editor-stats" class="whitespace-nowrap ml-2 bg-background px-2 py-0.5 rounded text-[10px]">0 chars</span>
                     </div>
                     
-                    <div class="flex-1 flex relative min-h-0 bg-[#1e1e1e] overflow-hidden">
+                    <div class="flex-1 flex relative min-h-0 bg-[#1e1e1e] overflow-hidden group">
                         <!-- Textarea -->
-                        <textarea id="code-input" class="flex-1 p-3 md:p-4 bg-[#1e1e1e] font-mono text-gray-300 resize-none focus:outline-none text-base md:text-sm leading-relaxed whitespace-pre overflow-auto" spellcheck="false" wrap="off"></textarea>
+                        <textarea id="code-input" class="flex-1 p-3 md:p-4 bg-[#1e1e1e] font-mono text-gray-300 resize-none focus:outline-none text-base md:text-sm leading-relaxed whitespace-pre overflow-auto custom-scrollbar" spellcheck="false" wrap="off"></textarea>
                         <!-- Image Preview Placeholder -->
                         <div id="image-preview-area" class="hidden w-full h-full flex items-center justify-center bg-[#1e1e1e] text-muted p-4">
                             <img id="image-preview-img" class="max-w-full max-h-full object-contain" />
@@ -199,23 +211,23 @@
                  <!-- AI Panel -->
                  <div class="flex flex-col gap-2 shrink-0 h-auto pb-safe relative z-30">
                     <!-- Suggestion Popup -->
-                    <div id="mention-popup" class="hidden absolute bottom-full left-0 w-full mb-2 bg-surface border border-muted rounded-lg shadow-2xl max-h-48 overflow-y-auto overflow-x-hidden z-50">
+                    <div id="mention-popup" class="hidden absolute bottom-full left-0 w-full mb-2 bg-[#1f2937] border border-gray-600 rounded-lg shadow-2xl max-h-48 overflow-y-auto overflow-x-hidden z-50">
                         <!-- Items injected by JS -->
                     </div>
 
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between px-1">
                         <div class="flex items-center space-x-2 text-sm text-primary">
                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.405 2.138a.75.75 0 01.638.92l-2.033 6.1a.75.75 0 01-1.33.001l-.85-2.55a.75.75 0 00-.4-1.033L5.28 2.97a.75.75 0 01.597-1.373l8.5 1.7a.75.75 0 011.028.841zM3.75 9.19L6.5 6.94l-2.75-2.25v4.5zM12.5 15.25a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75h-.008a.75.75 0 01-.75-.75v-.008zM15.25 12.5a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75v-.008a.75.75 0 00-.75-.75h-.008zM12.5 11.25a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75h-.008a.75.75 0 01-.75-.75v-.008zM9.75 15.25a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75v-.008a.75.75 0 00-.75-.75h-.008z" clip-rule="evenodd" /></svg>
                            <p class="font-semibold">AI Assistant <span class="text-xs text-gray-500 font-normal hidden md:inline">(Type @ to mention files)</span></p>
                         </div>
-                        <button id="debug-btn" class="hidden bg-primary/20 text-primary hover:bg-primary/30 text-xs py-1.5 px-3 rounded transition-colors">Debug File</button>
+                        <button id="debug-btn" class="hidden bg-primary/20 text-primary hover:bg-primary/30 text-xs py-1.5 px-3 rounded transition-colors font-medium">Debug File</button>
                     </div>
                     
                     <div class="relative">
                       <textarea
                         id="ai-prompt"
                         placeholder="Ask to create/modify files... (Type @ for files)"
-                        class="w-full p-3 pr-12 bg-surface border border-subtle rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-gray-300 text-base md:text-sm"
+                        class="w-full p-3 pr-12 bg-surface border border-subtle rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-gray-300 text-base md:text-sm shadow-sm"
                         rows="2"
                         autocomplete="off"
                       ></textarea>
@@ -226,892 +238,1078 @@
                          <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                         </svg>
-                        <svg id="ai-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg id="loading-icon" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                       </button>
                     </div>
-                    <div id="ai-status" class="hidden max-h-32 overflow-y-auto bg-surface border border-subtle rounded p-2 text-xs font-mono text-gray-300"></div>
+                    
+                    <!-- AI Status & Explanation -->
+                    <div id="ai-status-container" class="hidden rounded-lg bg-surface border border-subtle p-3 text-xs font-mono transition-all">
+                        <div id="ai-status-text" class="text-primary font-bold mb-1">Processing...</div>
+                         <div id="ai-explanation" class="text-gray-300 max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap"></div>
+                         <div id="ai-sources" class="mt-2 pt-2 border-t border-gray-700 text-gray-500 hidden">
+                             <span class="font-bold text-gray-400">Sources verified:</span>
+                             <ul id="ai-sources-list" class="list-disc pl-4 mt-1 space-y-0.5"></ul>
+                         </div>
+                    </div>
+
                  </div>
              </div>
 
              <!-- Texture View -->
-             <div id="view-texture" class="hidden flex-1 p-4 md:p-6 gap-6 overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto w-full pb-safe">
-                    <div class="bg-surface border border-subtle rounded-lg shadow-md p-4">
-                        <h2 class="text-xl font-bold mb-4">Pack Icon Generator</h2>
+             <div id="view-texture" class="hidden flex-1 flex flex-col p-4 md:p-6 gap-6 overflow-y-auto custom-scrollbar">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto w-full">
+                    <div class="bg-surface border border-subtle rounded-lg shadow-md p-4 md:p-6">
+                        <h2 class="text-xl font-bold mb-4 text-white">Pack Icon Generator</h2>
                         <p class="text-sm text-muted mb-4">
-                          Generate a unique 512x512px icon for your pack.
-                          Powered by Pollinations.ai.
+                          Generate a unique 512x512px icon for your pack. It will be saved as `pack_icon.png`.
                         </p>
                         <div class="space-y-2">
                           <label class="block text-sm font-medium text-gray-300 mb-1">Icon Prompt</label>
-                          <input id="texture-prompt" class="w-full p-2.5 md:p-2 bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200 text-base md:text-sm" placeholder="e.g., A glowing emerald sword on a shield">
+                          <input id="texture-prompt" class="w-full p-2 bg-subtle border border-muted rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-200" placeholder="e.g., A glowing emerald sword on a shield">
                         </div>
-                        <button id="gen-texture-btn" class="mt-4 w-full bg-primary text-white font-bold py-3 md:py-2 px-4 rounded-lg hover:bg-primary-hover transition-colors disabled:bg-muted">
-                          Generate Icon
+                        <button id="generate-texture-btn" class="mt-4 w-full bg-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-primary-hover transition-colors">
+                          Generate Icon (Free)
                         </button>
-                         <p id="texture-error" class="text-red-400 mt-2 text-sm hidden"></p>
+                        <p id="texture-error" class="hidden text-red-400 mt-2 text-sm"></p>
                     </div>
                     
                     <div class="space-y-4">
-                        <h3 class="text-lg font-semibold">Current Icon</h3>
-                        <div class="bg-surface border border-subtle rounded-lg shadow-md aspect-square flex items-center justify-center overflow-hidden relative group">
-                            <div id="no-icon-msg" class="text-muted p-4 text-center">No icon generated yet.</div>
-                            <img id="current-pack-icon" class="hidden w-full h-full object-cover" />
-                            <div id="icon-overlay" class="hidden absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2 text-center text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">pack_icon.png</div>
+                        <h3 class="text-lg font-semibold text-white">Current Pack Icon</h3>
+                        <div class="aspect-square bg-surface border border-subtle rounded-lg shadow-md overflow-hidden relative flex items-center justify-center">
+                             <img id="current-pack-icon" class="hidden w-full h-full object-cover" />
+                             <p id="no-icon-text" class="text-muted text-center p-4">No icon generated yet.</p>
                         </div>
                     </div>
-                </div>
+                 </div>
              </div>
         </div>
     </main>
 
+    <!-- App Logic -->
     <script type="module">
-        import { GoogleGenAI } from "https://esm.run/@google/genai";
+        import { GoogleGenAI } from "@google/genai";
+        import JSZip from "jszip";
 
-        // ==========================================
-        // State Management
-        // ==========================================
-        const state = {
-            files: [], // { path: string, content: string, isBinary: boolean }
-            config: {
-                name: 'My Awesome Pack',
-                description: 'A new pack created with Bedrock Pack Studio.',
-                author: 'Player',
-                version: [1, 0, 0],
-                minEngineVersion: [1, 21, 0],
-                dependencies: [
-                    { module_name: '@minecraft/server', version: '2.4.0-beta' },
-                    { module_name: '@minecraft/server-ui', version: '2.1.0-beta' },
-                ]
-            },
-            selectedFile: null,
-            expandedFolders: new Set(['scripts', 'entities', 'texts', 'textures']), // Default open common folders
-            packIconBase64: null,
-            isGenerating: false
+        // --- STATE ---
+        const DEFAULT_CONFIG = {
+            name: 'My Awesome Pack',
+            description: 'A new pack created with Bedrock Pack Studio.',
+            author: 'Player',
+            version: [1, 0, 0],
+            minEngineVersion: [1, 21, 0],
+            dependencies: [
+                { module_name: '@minecraft/server', version: '2.4.0-beta' },
+                { module_name: '@minecraft/server-ui', version: '2.1.0-beta' },
+            ],
         };
-
+        
         const DEFAULT_SCRIPT = `// Generated with Bedrock Pack Studio
-import { world } from '@minecraft/server';
+import { world, system } from '@minecraft/server';
 
+// Subscribe to a chat event
 world.beforeEvents.chatSend.subscribe((eventData) => {
-  const player = eventData.sender;
-  if (eventData.message.toLowerCase() === 'hello') {
-    player.sendMessage('Hello from your new pack!');
-    eventData.cancel = true;
-  }
+    const player = eventData.sender;
+    if (eventData.message.toLowerCase() === 'hello') {
+        system.run(() => {
+             player.sendMessage('Hello from your new pack!');
+        });
+        eventData.cancel = true;
+    }
 });
 `;
 
-        // ==========================================
-        // UI References
-        // ==========================================
+        let appState = {
+            config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
+            files: [
+                { path: 'manifest.json', content: '', isBinary: false },
+                { path: 'scripts/main.js', content: DEFAULT_SCRIPT, isBinary: false }
+            ],
+            activeTab: 'files',
+            selectedFile: 'scripts/main.js',
+            isLoading: false
+        };
+
+        // Update manifest content initially
+        updateManifestFile();
+
+        // --- DOM ELEMENTS ---
         const els = {
+            sidebar: document.getElementById('sidebar'),
             mobileMenuBtn: document.getElementById('mobile-menu-btn'),
             closeSidebarBtn: document.getElementById('close-sidebar-btn'),
-            sidebar: document.getElementById('sidebar'),
-            refreshFilesBtn: document.getElementById('refresh-files'),
+            tabExplorer: document.getElementById('tab-explorer'),
+            tabSettings: document.getElementById('tab-settings'),
+            panelExplorer: document.getElementById('panel-explorer'),
+            panelSettings: document.getElementById('panel-settings'),
             
             fileTree: document.getElementById('file-tree'),
-            editor: document.getElementById('code-input'),
-            editorFileName: document.getElementById('editor-filename'),
-            editorStats: document.getElementById('editor-stats'),
-            imagePreviewArea: document.getElementById('image-preview-area'),
-            imagePreviewImg: document.getElementById('image-preview-img'),
+            refreshFilesBtn: document.getElementById('refresh-files'),
             
-            confName: document.getElementById('conf-name'),
-            confDesc: document.getElementById('conf-desc'),
-            confAuthor: document.getElementById('conf-author'),
-            confVersion: document.getElementById('conf-version'),
-            confEngine: document.getElementById('conf-engine'),
+            configInputs: {
+                name: document.getElementById('conf-name'),
+                desc: document.getElementById('conf-desc'),
+                author: document.getElementById('conf-author'),
+                version: document.getElementById('conf-version'),
+                engine: document.getElementById('conf-engine'),
+            },
             depList: document.getElementById('dependencies-list'),
-            
+            addDepBtn: document.getElementById('add-dep-btn'),
+            saveConfigBtn: document.getElementById('save-config-btn'),
+            resetApiKeyBtn: document.getElementById('reset-api-key'),
+            selectApiKeyBtn: document.getElementById('select-api-key'),
+
             tabFiles: document.getElementById('tab-files'),
             tabTexture: document.getElementById('tab-texture'),
             viewEditor: document.getElementById('view-editor'),
             viewTexture: document.getElementById('view-texture'),
+
+            editorFilename: document.getElementById('editor-filename'),
+            editorStats: document.getElementById('editor-stats'),
+            codeInput: document.getElementById('code-input'),
+            imagePreviewArea: document.getElementById('image-preview-area'),
+            imagePreviewImg: document.getElementById('image-preview-img'),
             
             aiPrompt: document.getElementById('ai-prompt'),
-            aiStatus: document.getElementById('ai-status'),
-            spinner: document.getElementById('ai-spinner'),
+            sendAiBtn: document.getElementById('send-ai-btn'),
             sendIcon: document.getElementById('send-icon'),
+            loadingIcon: document.getElementById('loading-icon'),
+            aiStatusContainer: document.getElementById('ai-status-container'),
+            aiStatusText: document.getElementById('ai-status-text'),
+            aiExplanation: document.getElementById('ai-explanation'),
+            aiSources: document.getElementById('ai-sources'),
+            aiSourcesList: document.getElementById('ai-sources-list'),
             mentionPopup: document.getElementById('mention-popup'),
-            
+            debugBtn: document.getElementById('debug-btn'),
+
             texturePrompt: document.getElementById('texture-prompt'),
+            generateTextureBtn: document.getElementById('generate-texture-btn'),
+            textureError: document.getElementById('texture-error'),
             currentPackIcon: document.getElementById('current-pack-icon'),
-            noIconMsg: document.getElementById('no-icon-msg'),
-            iconOverlay: document.getElementById('icon-overlay'),
-            textureError: document.getElementById('texture-error')
+            noIconText: document.getElementById('no-icon-text'),
+            
+            downloadBtn: document.getElementById('download-btn'),
+            importBtn: document.getElementById('import-btn'),
+            importInput: document.getElementById('import-input'),
+            downloadIcon: document.getElementById('download-icon'),
+            spinnerIcon: document.getElementById('spinner-icon'),
+            downloadText: document.getElementById('download-text'),
         };
 
-        // ==========================================
-        // API Key & Service
-        // ==========================================
-        function getApiKey() {
-            let key = localStorage.getItem("GEMINI_API_KEY");
-            if (!key) {
-                key = prompt("Please enter your Google Gemini API Key:");
-                if (key) {
-                    localStorage.setItem("GEMINI_API_KEY", key);
-                }
-            }
-            return key;
-        }
-
-        // Initialize State
+        // --- INITIALIZATION ---
         function init() {
-            // Create default files
-            const manifest = generateManifest(state.config);
-            state.files = [
-                { path: 'manifest.json', content: JSON.stringify(manifest, null, 2), isBinary: false },
-                { path: 'scripts/main.js', content: DEFAULT_SCRIPT, isBinary: false }
-            ];
-            state.selectedFile = 'scripts/main.js';
-
-            // Setup UI
             renderFileTree();
             renderConfig();
-            renderEditor();
-            setupEventListeners();
-            setupMentionSystem();
-
-            // Initial Tab
-            switchTab('Files');
-        }
-
-        function getAIClient() {
-            const key = getApiKey();
-            if (!key) {
-                alert("API Key is required for AI features.");
-                return null;
-            }
-            return new GoogleGenAI({ apiKey: key });
-        }
-
-        // ==========================================
-        // Logic: AI Generation
-        // ==========================================
-        const SCRIPT_SYSTEM_PROMPT = `You are an expert Minecraft Bedrock addon developer.
-Your task is to generate or modify files for a Bedrock Behavior Pack.
-
-You MUST return a strictly valid JSON object with the following structure:
-{
-  "files": [
-    {
-      "path": "scripts/main.js",
-      "content": "... javascript code ..."
-    },
-    {
-      "path": "entities/my_entity.json",
-      "content": "... json content ..."
-    }
-  ],
-  "explanation": "Brief description of changes"
-}
-
-Constraints:
-- 'path' must be the relative path.
-- 'content' must be the raw text content.
-- Use '@minecraft/server' version '2.4.0-beta' and '@minecraft/server-ui' version '2.1.0-beta'.
-- Do NOT use markdown formatting (no \`\`\`json).
-- Return ONLY the JSON object.
-- If the user asks to modify code, return the FULL content of the modified file(s).`;
-
-        async function generateFiles(promptText) {
-            const ai = getAIClient();
-            if (!ai) return;
-
-            // Parse mentions from prompt (format: @filepath)
-            // If a file is mentioned, we MUST include it.
-            // If no files mentioned, we include small text files as context, up to a limit.
+            loadFileContent(appState.selectedFile);
             
-            const mentionedPaths = [];
-            const mentionRegex = /@([\w\/\.\-_]+)/g;
-            let match;
-            while((match = mentionRegex.exec(promptText)) !== null) {
-                mentionedPaths.push(match[1]);
-            }
-
-            let fileContext = "";
+            // Event Listeners
+            els.mobileMenuBtn.addEventListener('click', () => els.sidebar.classList.remove('hidden'));
+            els.closeSidebarBtn.addEventListener('click', () => els.sidebar.classList.add('hidden'));
             
-            if (mentionedPaths.length > 0) {
-                 // Only include explicitly mentioned files
-                 fileContext = state.files
-                    .filter(f => mentionedPaths.includes(f.path))
-                    .map(f => `File: ${f.path}\n---\n${f.isBinary ? '(Binary Data)' : f.content}\n---\n`)
-                    .join("\n");
-            } else {
-                // Auto-include logic: Include selected file + manifest + main.js if small enough
-                const importantFiles = ['manifest.json', 'scripts/main.js', state.selectedFile];
-                fileContext = state.files
-                    .filter(f => !f.isBinary && f.content.length < 8000 && (importantFiles.includes(f.path) || state.files.length < 5)) 
-                    .map(f => `File: ${f.path}\n---\n${f.content}\n---\n`)
-                    .join("\n");
-            }
+            // Sidebar Tabs
+            els.tabExplorer.addEventListener('click', () => switchSidebarTab('explorer'));
+            els.tabSettings.addEventListener('click', () => switchSidebarTab('settings'));
 
-            const fullPrompt = `User Request: "${promptText}"
+            // Main Tabs
+            els.tabFiles.addEventListener('click', () => switchMainTab('files'));
+            els.tabTexture.addEventListener('click', () => switchMainTab('texture'));
 
-Current Project Files Context:
-${fileContext}
-
-Generate the necessary file updates/creations in JSON format.`;
-
-            try {
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: fullPrompt,
-                    config: {
-                        systemInstruction: SCRIPT_SYSTEM_PROMPT,
-                        responseMimeType: "application/json"
-                    }
-                });
-
-                const result = JSON.parse(response.text);
-                
-                if (result.files) {
-                    result.files.forEach(f => {
-                        updateFileInState(f.path, f.content);
-                    });
-                    // If new files created, select the first one
-                    if (result.files.length > 0) {
-                        state.selectedFile = result.files[0].path;
-                        renderFileTree();
-                        renderEditor();
-                    }
-                }
-                return result.explanation;
-            } catch (e) {
-                console.error(e);
-                throw new Error("AI Generation Failed: " + e.message);
-            }
-        }
-
-        async function checkScript(content) {
-            const ai = getAIClient();
-            if (!ai) return "API Key missing.";
-            
-            try {
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: `Check this Minecraft script for errors:\n\n${content}`,
-                    config: {
-                         systemInstruction: "You are a Minecraft Bedrock script debugger. Identify errors. If valid, say 'No issues found'.",
-                    }
-                });
-                return response.text;
-            } catch (e) {
-                return "Error checking script: " + e.message;
-            }
-        }
-
-        // ==========================================
-        // Logic: Pollinations.ai Image Gen
-        // ==========================================
-        async function generatePollinationsImage(promptText) {
-            const fullPrompt = `${promptText}, pixel art, minecraft style`;
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=512&height=512&nologo=true`;
-            
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("Failed to fetch image from Pollinations.");
-            
-            const blob = await response.blob();
-            
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    resolve(reader.result.split(',')[1]); 
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
+            // Config
+            els.saveConfigBtn.addEventListener('click', saveConfigFromUI);
+            els.addDepBtn.addEventListener('click', () => {
+                appState.config.dependencies.push({ module_name: '', version: '' });
+                renderConfig();
             });
-        }
-
-        // ==========================================
-        // Logic: Pack Management
-        // ==========================================
-        function generateManifest(config) {
-            return {
-                format_version: 2,
-                header: {
-                    name: `${config.name} [BP]`,
-                    description: config.description,
-                    uuid: crypto.randomUUID(),
-                    version: config.version,
-                    min_engine_version: config.minEngineVersion,
-                },
-                modules: [
-                    { type: 'data', uuid: crypto.randomUUID(), version: config.version },
-                    { type: 'script', uuid: crypto.randomUUID(), version: config.version, entry: 'scripts/main.js' },
-                ],
-                dependencies: config.dependencies,
-                metadata: { authors: [config.author] },
-            };
-        }
-
-        function updateFileInState(path, content, isBinary = false) {
-            const idx = state.files.findIndex(f => f.path === path);
-            if (idx !== -1) {
-                state.files[idx] = { path, content, isBinary };
-            } else {
-                state.files.push({ path, content, isBinary });
-            }
-            if (path === 'pack_icon.png') {
-                state.packIconBase64 = content;
-                renderTexturePreview();
-            }
             
-            // Expand folders leading to this file
-            const parts = path.split('/');
-            if (parts.length > 1) {
-                let currentPath = "";
-                for(let i=0; i<parts.length-1; i++) {
-                    currentPath += (i===0 ? "" : "/") + parts[i];
-                    state.expandedFolders.add(currentPath);
+            // API Key management
+            els.resetApiKeyBtn.addEventListener('click', async () => {
+                if(confirm("Reset API Key? This will remove any locally stored key.")) {
+                   localStorage.removeItem('bedrock_studio_api_key');
+                   window.location.reload();
                 }
-            }
-        }
-
-        async function downloadPack() {
-            const zip = new JSZip();
-            const manifest = generateManifest(state.config);
-            updateFileInState('manifest.json', JSON.stringify(manifest, null, 2));
-
-            state.files.forEach(f => {
-                if (f.isBinary) {
-                    zip.file(f.path, f.content, { base64: true });
+            });
+            
+            els.selectApiKeyBtn.addEventListener('click', async () => {
+                if (typeof window.aistudio !== 'undefined') {
+                    try {
+                        await window.aistudio.openSelectKey();
+                    } catch(e) {
+                        alert("Failed to open selection dialog: " + e.message);
+                    }
                 } else {
-                    zip.file(f.path, f.content);
-                }
-            });
-
-            const content = await zip.generateAsync({ type: 'blob' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = `${state.config.name.replace(/[^a-z0-9]/gi, '_')}.mcpack`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        async function importPack(file) {
-            const zip = await JSZip.loadAsync(file);
-            state.files = [];
-            state.expandedFolders.clear();
-            
-            const promises = [];
-            
-            zip.forEach((relativePath, zipEntry) => {
-                if (zipEntry.dir) return;
-                const promise = (async () => {
-                    const ext = relativePath.split('.').pop().toLowerCase();
-                    const isBinary = ['png','jpg','jpeg','tga','fsb','bin'].includes(ext);
-                    
-                    if (isBinary) {
-                        const content = await zipEntry.async('base64');
-                        state.files.push({ path: relativePath, content, isBinary: true });
-                        if (relativePath === 'pack_icon.png') state.packIconBase64 = content;
-                    } else {
-                        const content = await zipEntry.async('string');
-                        state.files.push({ path: relativePath, content, isBinary: false });
-                        if (relativePath === 'manifest.json') {
-                            try {
-                                const m = JSON.parse(content);
-                                state.config.name = m.header.name.replace(' [BP]', '');
-                                state.config.description = m.header.description;
-                                state.config.version = m.header.version;
-                                state.config.minEngineVersion = m.header.min_engine_version;
-                                state.config.author = m.metadata?.authors?.[0] || 'Unknown';
-                                state.config.dependencies = m.dependencies || [];
-                            } catch (e) { console.error("Manifest parse error", e); }
-                        }
-                    }
-                })();
-                promises.push(promise);
-            });
-            
-            await Promise.all(promises);
-            state.selectedFile = state.files.find(f => f.path.endsWith('.js'))?.path || state.files[0]?.path;
-            
-            // Auto expand top level folders
-            state.files.forEach(f => {
-                const parts = f.path.split('/');
-                if(parts.length > 1) state.expandedFolders.add(parts[0]);
-            });
-
-            renderFileTree();
-            renderConfig();
-            renderEditor();
-            renderTexturePreview();
-        }
-
-        // ==========================================
-        // UI Rendering: Hierarchical File Tree
-        // ==========================================
-
-        function toggleSidebar() {
-            els.sidebar.classList.toggle('hidden');
-            els.sidebar.classList.toggle('flex');
-        }
-
-        function closeSidebar() {
-            if (window.innerWidth < 768) {
-                els.sidebar.classList.add('hidden');
-                els.sidebar.classList.remove('flex');
-            }
-        }
-
-        // Build nested object structure from file list
-        function buildFileHierarchy(files) {
-            const root = [];
-            
-            const findOrAddFolder = (list, name, fullPath) => {
-                let folder = list.find(n => n.name === name && n.type === 'folder');
-                if (!folder) {
-                    folder = { name, type: 'folder', path: fullPath, children: [] };
-                    list.push(folder);
-                }
-                return folder;
-            };
-
-            files.forEach(file => {
-                const parts = file.path.split('/');
-                let currentLevel = root;
-                let currentPath = "";
-                
-                // Iterate all parts. Last part is file, others are folders
-                parts.forEach((part, index) => {
-                    const isFile = index === parts.length - 1;
-                    currentPath += (index === 0 ? "" : "/") + part;
-                    
-                    if (isFile) {
-                        currentLevel.push({ name: part, type: 'file', path: file.path });
-                    } else {
-                        const folder = findOrAddFolder(currentLevel, part, currentPath);
-                        currentLevel = folder.children;
-                    }
-                });
-            });
-
-            // Sort helper
-            const sortNodes = (nodes) => {
-                nodes.sort((a, b) => {
-                    if (a.type === b.type) return a.name.localeCompare(b.name);
-                    return a.type === 'folder' ? -1 : 1;
-                });
-                nodes.forEach(n => {
-                    if (n.children) sortNodes(n.children);
-                });
-            };
-            
-            sortNodes(root);
-            return root;
-        }
-
-        function renderFileTree() {
-            els.fileTree.innerHTML = '';
-            const hierarchy = buildFileHierarchy(state.files);
-
-            const createNodeElement = (node, depth) => {
-                const container = document.createElement('div');
-                
-                // Row Item
-                const row = document.createElement('div');
-                row.className = `flex items-center py-2 px-3 cursor-pointer transition-colors border-l-2 ${
-                    node.type === 'file' && node.path === state.selectedFile 
-                    ? 'bg-subtle text-white border-primary' 
-                    : 'text-gray-400 border-transparent hover:bg-surface hover:text-gray-200'
-                }`;
-                row.style.paddingLeft = `${depth * 12 + 12}px`; // Indentation
-                
-                // Icon
-                const icon = document.createElement('span');
-                icon.className = "mr-2 flex-shrink-0 w-5 text-center";
-                if (node.type === 'folder') {
-                    const isOpen = state.expandedFolders.has(node.path);
-                    row.className += isOpen ? " folder-open" : "";
-                    icon.innerHTML = `<svg class="w-4 h-4 folder-arrow text-gray-500 inline-block transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
-                    row.onclick = (e) => {
-                        e.stopPropagation();
-                        if (state.expandedFolders.has(node.path)) {
-                            state.expandedFolders.delete(node.path);
+                    // Fallback for manual entry
+                    const current = localStorage.getItem('bedrock_studio_api_key') || '';
+                    const input = prompt("Enter your Gemini API Key manually:\n(This will be stored in your browser's Local Storage)", current);
+                    if (input !== null) {
+                        const key = input.trim();
+                        if (key) {
+                            localStorage.setItem('bedrock_studio_api_key', key);
+                            alert("API Key saved locally. You can now send requests.");
                         } else {
-                            state.expandedFolders.add(node.path);
+                            localStorage.removeItem('bedrock_studio_api_key');
+                            alert("API Key cleared.");
                         }
-                        renderFileTree();
-                    };
-                } else {
-                     // File Icon Logic
-                    let emoji = '📄';
-                    if (node.name.endsWith('.json')) emoji = '🔧';
-                    if (node.name.endsWith('.js')) emoji = '📜';
-                    if (node.name.endsWith('.png')) emoji = '🖼️';
-                    icon.textContent = emoji;
-                    
-                    row.onclick = () => {
-                        state.selectedFile = node.path;
-                        renderFileTree(); 
-                        renderEditor();
-                        closeSidebar();
-                    };
+                    }
                 }
-
-                // Label
-                const label = document.createElement('span');
-                label.className = "truncate text-sm font-mono";
-                label.textContent = node.name;
-                if (node.type === 'folder') label.className += " font-bold text-yellow-500/80";
-
-                row.appendChild(icon);
-                row.appendChild(label);
-                container.appendChild(row);
-
-                // Children
-                if (node.type === 'folder' && state.expandedFolders.has(node.path) && node.children) {
-                    const childContainer = document.createElement('div');
-                    node.children.forEach(child => {
-                        childContainer.appendChild(createNodeElement(child, depth + 1));
-                    });
-                    container.appendChild(childContainer);
-                }
-                
-                return container;
-            };
-
-            hierarchy.forEach(node => {
-                els.fileTree.appendChild(createNodeElement(node, 0));
             });
+
+            // Editor
+            els.codeInput.addEventListener('input', (e) => {
+                updateFileContent(appState.selectedFile, e.target.value);
+                updateEditorStats();
+            });
+
+            // AI
+            els.sendAiBtn.addEventListener('click', handleAiGeneration);
+            els.aiPrompt.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAiGeneration();
+                }
+            });
+            
+            // Debug Button
+            els.debugBtn.addEventListener('click', () => {
+                 checkScript(appState.selectedFile);
+            });
+
+            // Mention System
+            els.aiPrompt.addEventListener('input', handleMentionInput);
+
+            // Texture
+            els.generateTextureBtn.addEventListener('click', handleTextureGeneration);
+
+            // Import/Export
+            els.downloadBtn.addEventListener('click', downloadPack);
+            els.importBtn.addEventListener('click', () => els.importInput.click());
+            els.importInput.addEventListener('change', handleImport);
+            
+            els.refreshFilesBtn.addEventListener('click', renderFileTree);
         }
 
-        // ==========================================
-        // UI Rendering: Editor & Other
-        // ==========================================
+        // --- HELPER: API KEY & RETRY ---
+        
+        async function getApiKey() {
+            // 1. Check Local Storage (Manual Override)
+            const localKey = localStorage.getItem('bedrock_studio_api_key');
+            if (localKey) return localKey;
 
-        function renderEditor() {
-            const file = state.files.find(f => f.path === state.selectedFile);
-            if (!file) {
-                els.editor.value = '';
-                els.editorFileName.textContent = 'No file selected';
-                return;
-            }
-
-            els.editorFileName.textContent = file.path;
-            
-            if (file.isBinary) {
-                els.editor.classList.add('hidden');
-                els.imagePreviewArea.classList.remove('hidden');
-                if (file.path.endsWith('.png')) {
-                    els.imagePreviewImg.src = `data:image/png;base64,${file.content}`;
-                    els.imagePreviewArea.querySelector('img').classList.remove('hidden');
-                    els.imagePreviewArea.textContent = '';
-                    els.imagePreviewArea.appendChild(els.imagePreviewImg);
-                } else {
-                    els.imagePreviewArea.textContent = "Binary file (cannot preview)";
+            try {
+                // 2. Attempt to use the AI Studio bridge to select a key if available
+                if (typeof window.aistudio !== 'undefined') {
+                    const hasKey = await window.aistudio.hasSelectedApiKey();
+                    if (!hasKey) {
+                         console.log("No key selected. Triggering openSelectKey...");
+                         await window.aistudio.openSelectKey();
+                         // Assuming implicit success or user will try again if they cancelled
+                    }
                 }
-                els.editorStats.textContent = `${Math.round(file.content.length * 0.75 / 1024)} KB`;
-            } else {
-                els.editor.classList.remove('hidden');
-                els.imagePreviewArea.classList.add('hidden');
-                els.editor.value = file.content;
-                els.editorStats.textContent = `${file.content.length} chars`;
                 
-                const debugBtn = document.getElementById('debug-btn');
-                if (file.path.endsWith('.js')) {
-                    debugBtn.classList.remove('hidden');
-                } else {
-                    debugBtn.classList.add('hidden');
+                // 3. Safe access to process.env
+                // This check prevents "ReferenceError: process is not defined" in vanilla browser environments
+                if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+                    return process.env.API_KEY;
                 }
+            } catch (e) {
+                console.error("Error retrieving API key:", e);
+            }
+            
+            return null;
+        }
+
+        async function callWithRetry(fn, maxRetries = 3, onRetry = null) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fn();
+                } catch (e) {
+                    const isOverloaded = e.message?.includes('503') || e.message?.includes('overloaded') || e.status === 503;
+                    if (isOverloaded && i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 2000 + Math.random() * 1000;
+                        console.warn(`Model overloaded (503). Retrying in ${Math.round(delay)}ms...`);
+                        if (onRetry) onRetry(i + 1, delay);
+                        await new Promise(r => setTimeout(r, delay));
+                        continue;
+                    }
+                    throw e;
+                }
+            }
+        }
+
+        // --- UI LOGIC ---
+
+        function switchSidebarTab(tab) {
+            if (tab === 'explorer') {
+                els.tabExplorer.classList.replace('text-gray-400', 'text-primary');
+                els.tabExplorer.classList.replace('border-transparent', 'border-primary');
+                els.tabExplorer.classList.remove('hover:text-gray-200');
+                
+                els.tabSettings.classList.replace('text-primary', 'text-gray-400');
+                els.tabSettings.classList.replace('border-primary', 'border-transparent');
+                els.tabSettings.classList.add('hover:text-gray-200');
+                
+                els.panelExplorer.classList.remove('hidden');
+                els.panelSettings.classList.add('hidden');
+            } else {
+                els.tabSettings.classList.replace('text-gray-400', 'text-primary');
+                els.tabSettings.classList.replace('border-transparent', 'border-primary');
+                els.tabSettings.classList.remove('hover:text-gray-200');
+                
+                els.tabExplorer.classList.replace('text-primary', 'text-gray-400');
+                els.tabExplorer.classList.replace('border-primary', 'border-transparent');
+                els.tabExplorer.classList.add('hover:text-gray-200');
+                
+                els.panelSettings.classList.remove('hidden');
+                els.panelExplorer.classList.add('hidden');
+            }
+        }
+
+        function switchMainTab(tab) {
+            appState.activeTab = tab;
+            if (tab === 'files') {
+                els.tabFiles.classList.replace('text-gray-400', 'text-primary');
+                els.tabFiles.classList.replace('border-transparent', 'border-primary');
+                
+                els.tabTexture.classList.replace('text-primary', 'text-gray-400');
+                els.tabTexture.classList.replace('border-primary', 'border-transparent');
+                
+                els.viewEditor.classList.remove('hidden');
+                els.viewTexture.classList.add('hidden');
+            } else {
+                els.tabTexture.classList.replace('text-gray-400', 'text-primary');
+                els.tabTexture.classList.replace('border-transparent', 'border-primary');
+                
+                els.tabFiles.classList.replace('text-primary', 'text-gray-400');
+                els.tabFiles.classList.replace('border-primary', 'border-transparent');
+                
+                els.viewTexture.classList.remove('hidden');
+                els.viewEditor.classList.add('hidden');
+                
+                renderCurrentIcon();
             }
         }
 
         function renderConfig() {
-            els.confName.value = state.config.name;
-            els.confDesc.value = state.config.description;
-            els.confAuthor.value = state.config.author;
-            els.confVersion.value = state.config.version.join('.');
-            els.confEngine.value = state.config.minEngineVersion.join('.');
-            
+            const c = appState.config;
+            els.configInputs.name.value = c.name;
+            els.configInputs.desc.value = c.description;
+            els.configInputs.author.value = c.author;
+            els.configInputs.version.value = c.version.join('.');
+            els.configInputs.engine.value = c.minEngineVersion.join('.');
+
             els.depList.innerHTML = '';
-            state.config.dependencies.forEach((dep, idx) => {
-                const row = document.createElement('div');
-                row.className = "flex gap-2 mb-2";
-                row.innerHTML = `
-                    <input class="flex-1 p-2 md:p-1 bg-surface border border-muted rounded text-sm md:text-xs text-gray-300" value="${dep.module_name}" data-idx="${idx}" data-field="module_name">
-                    <input class="w-20 p-2 md:p-1 bg-surface border border-muted rounded text-sm md:text-xs text-gray-300" value="${dep.version}" data-idx="${idx}" data-field="version">
-                    <button class="text-red-400 hover:text-red-300 p-1" onclick="removeDep(${idx})">×</button>
+            c.dependencies.forEach((dep, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-2";
+                div.innerHTML = `
+                    <input class="flex-1 w-full p-2 bg-subtle border border-muted rounded text-xs md:text-sm text-gray-200" value="${dep.module_name}" placeholder="Module" data-idx="${idx}" data-field="module_name">
+                    <input class="w-24 md:w-32 p-2 bg-subtle border border-muted rounded text-xs md:text-sm text-gray-200" value="${dep.version}" placeholder="Version" data-idx="${idx}" data-field="version">
+                    <button class="text-red-400 hover:text-red-300 p-1" onclick="removeDep(${idx})">&times;</button>
                 `;
-                els.depList.appendChild(row);
+                els.depList.appendChild(div);
             });
-            
-            els.depList.querySelectorAll('input').forEach(input => {
-                input.onchange = (e) => {
+
+            // Bind dependency inputs
+            els.depList.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('input', (e) => {
                     const idx = parseInt(e.target.dataset.idx);
                     const field = e.target.dataset.field;
-                    state.config.dependencies[idx][field] = e.target.value;
-                };
+                    appState.config.dependencies[idx][field] = e.target.value;
+                });
             });
         }
 
-        function renderTexturePreview() {
-            if (state.packIconBase64) {
-                els.currentPackIcon.src = `data:image/png;base64,${state.packIconBase64}`;
-                els.currentPackIcon.classList.remove('hidden');
-                els.iconOverlay.classList.remove('hidden');
-                els.noIconMsg.classList.add('hidden');
-            } else {
-                els.currentPackIcon.classList.add('hidden');
-                els.iconOverlay.classList.add('hidden');
-                els.noIconMsg.classList.remove('hidden');
-            }
-        }
-
-        function switchTab(tab) {
-            if (tab === 'Files') {
-                els.tabFiles.classList.add('text-primary', 'border-primary');
-                els.tabFiles.classList.remove('text-gray-400', 'border-transparent');
-                els.tabTexture.classList.remove('text-primary', 'border-primary');
-                els.tabTexture.classList.add('text-gray-400', 'border-transparent');
-                els.viewEditor.classList.remove('hidden');
-                els.viewTexture.classList.add('hidden');
-            } else {
-                els.tabTexture.classList.add('text-primary', 'border-primary');
-                els.tabTexture.classList.remove('text-gray-400', 'border-transparent');
-                els.tabFiles.classList.remove('text-primary', 'border-primary');
-                els.tabFiles.classList.add('text-gray-400', 'border-transparent');
-                els.viewTexture.classList.remove('hidden');
-                els.viewEditor.classList.add('hidden');
-                renderTexturePreview();
-            }
-        }
-
-        function setAILoading(loading) {
-            if (loading) {
-                els.spinner.classList.remove('hidden');
-                els.sendIcon.classList.add('hidden');
-                document.getElementById('send-ai-btn').disabled = true;
-            } else {
-                els.spinner.classList.add('hidden');
-                els.sendIcon.classList.remove('hidden');
-                document.getElementById('send-ai-btn').disabled = false;
-            }
-        }
-
-        // ==========================================
-        // Feature: @ Mention System
-        // ==========================================
-        function setupMentionSystem() {
-            const input = els.aiPrompt;
-            const popup = els.mentionPopup;
-
-            const hidePopup = () => {
-                popup.classList.add('hidden');
-            };
-
-            const insertMention = (filepath) => {
-                const cursor = input.selectionStart;
-                const text = input.value;
-                const lastAt = text.lastIndexOf('@', cursor - 1);
-                
-                if (lastAt !== -1) {
-                    const before = text.substring(0, lastAt);
-                    const after = text.substring(cursor);
-                    input.value = `${before}@${filepath} ${after}`;
-                    input.focus();
-                    hidePopup();
-                }
-            };
-
-            input.addEventListener('input', () => {
-                const cursor = input.selectionStart;
-                const text = input.value;
-                
-                // Check if we are typing a mention
-                const lastAt = text.lastIndexOf('@', cursor - 1);
-                if (lastAt !== -1) {
-                    const query = text.substring(lastAt + 1, cursor);
-                    // Simple heuristic: if query contains space, stop suggesting
-                    if (query.includes(' ') || query.includes('\n')) {
-                        hidePopup();
-                        return;
-                    }
-
-                    // Filter files
-                    const matches = state.files
-                        .filter(f => f.path.toLowerCase().includes(query.toLowerCase()))
-                        .slice(0, 10); // Limit to 10 results
-
-                    if (matches.length > 0) {
-                        popup.innerHTML = '';
-                        matches.forEach(file => {
-                            const div = document.createElement('div');
-                            div.className = "px-3 py-2 text-sm hover:bg-primary hover:text-white cursor-pointer flex items-center border-b border-gray-700 last:border-0";
-                            div.innerHTML = `<span class="mr-2 text-gray-400">📄</span> ${file.path}`;
-                            div.onclick = (e) => {
-                                e.preventDefault(); // Prevent focus loss issues
-                                insertMention(file.path);
-                            };
-                            // Mobile touch handling
-                            div.ontouchstart = (e) => {
-                                e.preventDefault();
-                                insertMention(file.path);
-                            };
-                            popup.appendChild(div);
-                        });
-                        popup.classList.remove('hidden');
-                    } else {
-                        hidePopup();
-                    }
-                } else {
-                    hidePopup();
-                }
-            });
-
-            // Hide on blur, but allow click to register first
-            input.addEventListener('blur', () => {
-                setTimeout(hidePopup, 200);
-            });
-        }
-
-        // ==========================================
-        // Event Listeners
-        // ==========================================
-        function setupEventListeners() {
-            // Mobile Menu
-            els.mobileMenuBtn.onclick = toggleSidebar;
-            els.closeSidebarBtn.onclick = toggleSidebar;
-            els.refreshFilesBtn.onclick = renderFileTree;
-
-            // Tab Switching
-            els.tabFiles.onclick = () => switchTab('Files');
-            els.tabTexture.onclick = () => switchTab('Texture');
-            
-            // Config Changes
-            els.confName.onchange = (e) => state.config.name = e.target.value;
-            els.confDesc.onchange = (e) => state.config.description = e.target.value;
-            els.confAuthor.onchange = (e) => state.config.author = e.target.value;
-            els.confVersion.onchange = (e) => state.config.version = e.target.value.split('.').map(Number);
-            els.confEngine.onchange = (e) => state.config.minEngineVersion = e.target.value.split('.').map(Number);
-            
-            // Add Dependency
-            document.getElementById('add-dep-btn').onclick = () => {
-                state.config.dependencies.push({ module_name: '', version: '' });
-                renderConfig();
-            };
-            
-            // Save Config
-            document.getElementById('save-config-btn').onclick = () => {
-                const manifest = generateManifest(state.config);
-                updateFileInState('manifest.json', JSON.stringify(manifest, null, 2));
-                alert('Configuration saved to manifest.json');
-                renderEditor();
-                closeSidebar();
-            };
-
-            // Code Editing
-            els.editor.oninput = (e) => {
-                const file = state.files.find(f => f.path === state.selectedFile);
-                if (file) file.content = e.target.value;
-                els.editorStats.textContent = `${e.target.value.length} chars`;
-            };
-
-            // AI Generation
-            document.getElementById('send-ai-btn').onclick = async () => {
-                const prompt = els.aiPrompt.value.trim();
-                if (!prompt) return;
-                
-                setAILoading(true);
-                els.aiStatus.classList.add('hidden');
-                
-                try {
-                    const explanation = await generateFiles(prompt);
-                    els.aiPrompt.value = '';
-                    els.aiStatus.textContent = "AI: " + (explanation || "Done.");
-                    els.aiStatus.classList.remove('hidden');
-                    els.aiStatus.classList.add('text-green-400');
-                } catch (e) {
-                    els.aiStatus.textContent = e.message;
-                    els.aiStatus.classList.remove('hidden');
-                    els.aiStatus.classList.add('text-red-400');
-                } finally {
-                    setAILoading(false);
-                }
-            };
-
-            // Debug Button
-            document.getElementById('debug-btn').onclick = async () => {
-                const file = state.files.find(f => f.path === state.selectedFile);
-                if (!file) return;
-                
-                const btn = document.getElementById('debug-btn');
-                const originalText = btn.textContent;
-                btn.textContent = "Checking...";
-                btn.disabled = true;
-                
-                const result = await checkScript(file.content);
-                
-                els.aiStatus.textContent = "Debugger: " + result;
-                els.aiStatus.classList.remove('hidden');
-                els.aiStatus.className = "max-h-32 overflow-y-auto bg-surface border border-subtle rounded p-2 text-xs font-mono " + (result.includes("No issues") ? "text-blue-400" : "text-yellow-400");
-                
-                btn.textContent = originalText;
-                btn.disabled = false;
-            };
-
-            // Texture Generation
-            document.getElementById('gen-texture-btn').onclick = async () => {
-                const prompt = els.texturePrompt.value.trim();
-                const btn = document.getElementById('gen-texture-btn');
-                
-                if (!prompt) {
-                    els.textureError.textContent = "Please enter a prompt.";
-                    els.textureError.classList.remove('hidden');
-                    return;
-                }
-                
-                els.textureError.classList.add('hidden');
-                btn.textContent = "Generating...";
-                btn.disabled = true;
-                
-                try {
-                    const base64 = await generatePollinationsImage(prompt);
-                    updateFileInState('pack_icon.png', base64, true);
-                } catch (e) {
-                    els.textureError.textContent = e.message;
-                    els.textureError.classList.remove('hidden');
-                } finally {
-                    btn.textContent = "Generate Icon";
-                    btn.disabled = false;
-                }
-            };
-
-            // Download & Import
-            document.getElementById('download-btn').onclick = downloadPack;
-            
-            document.getElementById('import-btn').onclick = () => {
-                document.getElementById('import-input').click();
-            };
-            
-            document.getElementById('import-input').onchange = (e) => {
-                if (e.target.files.length > 0) {
-                    importPack(e.target.files[0]);
-                }
-            };
-
-            // Reset API Key
-            document.getElementById('reset-api-key').onclick = () => {
-                localStorage.removeItem("GEMINI_API_KEY");
-                location.reload();
-            };
-        }
-
-        // Expose for onclick handlers in HTML strings
         window.removeDep = (idx) => {
-            state.config.dependencies.splice(idx, 1);
+            appState.config.dependencies.splice(idx, 1);
             renderConfig();
         };
 
-        // Boot
+        function saveConfigFromUI() {
+            const c = appState.config;
+            c.name = els.configInputs.name.value;
+            c.description = els.configInputs.desc.value;
+            c.author = els.configInputs.author.value;
+            c.version = els.configInputs.version.value.split('.').map(Number);
+            c.minEngineVersion = els.configInputs.engine.value.split('.').map(Number);
+            
+            updateManifestFile();
+            alert('Configuration saved to manifest.json');
+        }
+
+        function updateManifestFile() {
+             const manifest = {
+                format_version: 2,
+                header: {
+                    name: `${appState.config.name} [BP]`,
+                    description: appState.config.description,
+                    uuid: crypto.randomUUID(),
+                    version: appState.config.version,
+                    min_engine_version: appState.config.minEngineVersion
+                },
+                modules: [
+                    { type: 'data', uuid: crypto.randomUUID(), version: appState.config.version },
+                    { type: 'script', uuid: crypto.randomUUID(), version: appState.config.version, entry: 'scripts/main.js' }
+                ],
+                dependencies: appState.config.dependencies,
+                metadata: { authors: [appState.config.author] }
+            };
+            
+            const content = JSON.stringify(manifest, null, 2);
+            const idx = appState.files.findIndex(f => f.path === 'manifest.json');
+            if (idx >= 0) appState.files[idx].content = content;
+            else appState.files.push({ path: 'manifest.json', content, isBinary: false });
+            
+            if (appState.selectedFile === 'manifest.json') {
+                els.codeInput.value = content;
+                updateEditorStats();
+            }
+        }
+
+        // --- FILE MANAGER ---
+
+        function renderFileTree() {
+            els.fileTree.innerHTML = '';
+            const paths = appState.files.map(f => f.path).sort();
+            
+            // Simple flat list for now, could be tree structure
+            // Building a visual tree structure
+            const tree = {};
+            paths.forEach(path => {
+                const parts = path.split('/');
+                let current = tree;
+                parts.forEach((part, i) => {
+                    if (!current[part]) current[part] = (i === parts.length - 1) ? null : {};
+                    current = current[part];
+                });
+            });
+
+            function buildDom(obj, prefix = '', depth = 0) {
+                const container = document.createElement('div');
+                container.className = depth > 0 ? "ml-3 border-l border-gray-700 pl-1" : "";
+                
+                // Folders first
+                const entries = Object.entries(obj).sort((a, b) => {
+                    const aIsFolder = a[1] !== null;
+                    const bIsFolder = b[1] !== null;
+                    if (aIsFolder && !bIsFolder) return -1;
+                    if (!aIsFolder && bIsFolder) return 1;
+                    return a[0].localeCompare(b[0]);
+                });
+
+                entries.forEach(([name, content]) => {
+                    const fullPath = prefix ? `${prefix}/${name}` : name;
+                    const item = document.createElement('div');
+                    const isFolder = content !== null;
+                    
+                    item.className = `flex items-center py-1.5 px-2 cursor-pointer rounded hover:bg-subtle transition-colors text-sm ${
+                        !isFolder && appState.selectedFile === fullPath ? 'bg-primary/20 text-primary border-l-2 border-primary font-medium' : 'text-gray-400'
+                    }`;
+                    
+                    // Icon
+                    let iconHtml = '';
+                    if (isFolder) {
+                        iconHtml = `<svg class="w-4 h-4 mr-2 text-yellow-500 shrink-0 folder-arrow" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>`;
+                    } else {
+                        let color = 'text-blue-400';
+                        if (name.endsWith('.json')) color = 'text-yellow-300';
+                        if (name.endsWith('.js')) color = 'text-yellow-500';
+                        if (name.endsWith('.png')) color = 'text-purple-400';
+                        iconHtml = `<svg class="w-4 h-4 mr-2 ${color} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>`;
+                    }
+
+                    item.innerHTML = `${iconHtml}<span class="truncate">${name}</span>`;
+                    
+                    if (isFolder) {
+                        const subContainer = buildDom(content, fullPath, depth + 1);
+                        // Initially open
+                        item.classList.add('folder-open');
+                        
+                        item.onclick = (e) => {
+                            e.stopPropagation();
+                            item.classList.toggle('folder-open');
+                            subContainer.classList.toggle('hidden');
+                            // Rotate arrow
+                            const arrow = item.querySelector('.folder-arrow');
+                            if (arrow) arrow.style.transform = item.classList.contains('folder-open') ? '' : 'rotate(-90deg)';
+                        };
+                        
+                        container.appendChild(item);
+                        container.appendChild(subContainer);
+                    } else {
+                        item.onclick = () => {
+                            loadFileContent(fullPath);
+                            renderFileTree(); // Re-render to update active state
+                            // On mobile, close sidebar when file selected
+                            if (window.innerWidth < 768) {
+                                els.sidebar.classList.add('hidden');
+                            }
+                        };
+                        item.draggable = true;
+                        item.ondragstart = (e) => {
+                            e.dataTransfer.setData("text/plain", `@${fullPath}`);
+                        }
+                        container.appendChild(item);
+                    }
+                });
+                return container;
+            }
+            
+            els.fileTree.appendChild(buildDom(tree));
+        }
+
+        function loadFileContent(path) {
+            appState.selectedFile = path;
+            const file = appState.files.find(f => f.path === path);
+            
+            els.editorFilename.innerText = path;
+            
+            if (!file) return;
+
+            if (file.isBinary && path.endsWith('.png')) {
+                els.codeInput.classList.add('hidden');
+                els.imagePreviewArea.classList.remove('hidden');
+                els.imagePreviewImg.src = `data:image/png;base64,${file.content}`;
+                els.editorStats.innerText = "Binary Image";
+                els.debugBtn.classList.add('hidden');
+            } else {
+                els.imagePreviewArea.classList.add('hidden');
+                els.codeInput.classList.remove('hidden');
+                els.codeInput.value = file.content;
+                updateEditorStats();
+                
+                // Show debug button for JS files
+                if (path.endsWith('.js') || path.endsWith('.ts')) {
+                    els.debugBtn.classList.remove('hidden');
+                } else {
+                    els.debugBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateFileContent(path, content) {
+            const file = appState.files.find(f => f.path === path);
+            if (file) file.content = content;
+        }
+
+        function updateEditorStats() {
+            const len = els.codeInput.value.length;
+            const lines = els.codeInput.value.split('\n').length;
+            els.editorStats.innerText = `${lines} lines | ${len} chars`;
+        }
+
+        // --- MENTION SYSTEM ---
+        function handleMentionInput(e) {
+            const val = e.target.value;
+            const cursor = e.target.selectionStart;
+            const lastAt = val.lastIndexOf('@', cursor - 1);
+            
+            if (lastAt !== -1) {
+                const query = val.substring(lastAt + 1, cursor);
+                if (!query.includes(' ')) {
+                    showMentions(query, lastAt);
+                    return;
+                }
+            }
+            els.mentionPopup.classList.add('hidden');
+        }
+
+        function showMentions(query, atIndex) {
+            const matches = appState.files.filter(f => f.path.toLowerCase().includes(query.toLowerCase()));
+            
+            if (matches.length === 0) {
+                els.mentionPopup.classList.add('hidden');
+                return;
+            }
+
+            els.mentionPopup.innerHTML = '';
+            matches.slice(0, 5).forEach(f => {
+                const div = document.createElement('div');
+                div.className = "px-3 py-2 hover:bg-primary/20 cursor-pointer text-sm text-gray-300 truncate";
+                div.innerText = f.path;
+                div.onclick = () => {
+                    const before = els.aiPrompt.value.substring(0, atIndex);
+                    const after = els.aiPrompt.value.substring(els.aiPrompt.selectionStart);
+                    els.aiPrompt.value = `${before}@${f.path} ${after}`;
+                    els.mentionPopup.classList.add('hidden');
+                    els.aiPrompt.focus();
+                };
+                els.mentionPopup.appendChild(div);
+            });
+            
+            els.mentionPopup.classList.remove('hidden');
+        }
+
+        // --- AI LOGIC (UPDATED) ---
+
+        const SYSTEM_INSTRUCTION = `You are an expert Minecraft Bedrock Add-on developer.
+Your goal is to generate valid JSON updates for the project files.
+You must always return a raw JSON object (no markdown formatting) with this structure:
+{
+  "files": [
+    { "path": "scripts/main.js", "content": "..." }
+  ],
+  "explanation": "Brief summary of what you did."
+}
+RULES:
+1. Use @minecraft/server 2.4.0-beta and @minecraft/server-ui 2.1.0-beta.
+2. If modifying a file, return the FULL new content.
+3. Do not break existing functionality unless asked.
+4. 'content' must be stringified properly.
+`;
+
+        async function handleAiGeneration() {
+            const prompt = els.aiPrompt.value.trim();
+            if (!prompt) return;
+            
+            // 1. Show loading state IMMEDIATELY to give user feedback
+            setAiLoading(true);
+            els.aiStatusContainer.classList.remove('hidden');
+            els.aiSources.classList.add('hidden');
+            updateAiStatus("Initializing AI...", true);
+
+            try {
+                // 2. Get user API Key (safely)
+                const apiKey = await getApiKey();
+                if (!apiKey) {
+                    // If we still don't have a key (process.env missing AND user didn't select one)
+                    updateAiStatus("Error: API Key missing.", false);
+                    els.aiExplanation.innerText = "Please select an API Key in Settings to continue.";
+                    
+                    // Optionally switch to settings tab to show the button
+                    // switchSidebarTab('settings'); 
+                    
+                    setAiLoading(false); // Re-enable button
+                    return;
+                }
+
+                const ai = new GoogleGenAI({ apiKey });
+                
+                // 3. Identify Intent & Context
+                // Detect if the user mentions specific files
+                const mentionedFiles = [];
+                const regex = /@([\w\/\.\-\_]+)/g;
+                let match;
+                while((match = regex.exec(prompt)) !== null) {
+                    const f = appState.files.find(file => file.path === match[1]);
+                    if (f) mentionedFiles.push(f);
+                }
+                
+                // Add current active file context if not mentioned
+                const activeFile = appState.files.find(f => f.path === appState.selectedFile);
+                if (activeFile && !mentionedFiles.includes(activeFile) && !activeFile.isBinary) {
+                    mentionedFiles.push(activeFile);
+                }
+
+                const fileContext = mentionedFiles.map(f => `File: ${f.path}\n---\n${f.content}\n---\n`).join("\n");
+                
+                // 4. Research Phase (Grounding with Google Search)
+                updateAiStatus("Searching docs & verifying API...", true);
+                let researchData = "";
+                
+                try {
+                    const researchPrompt = `
+                    User Query: "${prompt}"
+                    
+                    Task: 
+                    1. Search for the LATEST Minecraft Bedrock Script API documentation specifically at 'https://jaylydev.github.io/scriptapi-docs/latest/'.
+                    2. Specifically verify the exact class names, event names (e.g., world.afterEvents.entityDie vs world.events.entityDie), and method signatures.
+                    3. Look for 'Scoreboard', 'Objective', 'setScore', 'getScore', and 'EntityDieAfterEvent' if relevant to the user prompt.
+                    4. If the user asks for specific events (like mob death), verify the correct event name in the documentation.
+                    
+                    Return a summary of the correct API usage found, citing the URLs.
+                    `;
+
+                    const researchResponse = await callWithRetry(async () => {
+                        return await ai.models.generateContent({
+                            model: "gemini-2.5-flash",
+                            contents: researchPrompt,
+                            config: {
+                                tools: [{ googleSearch: {} }],
+                                systemInstruction: "You are a technical researcher. Verify Minecraft Script API details using Google Search. Focus on the domain 'jaylydev.github.io'.",
+                            }
+                        });
+                    }, 3, (attempt, delay) => {
+                         updateAiStatus(`API Search busy (Retry ${attempt})...`, true);
+                    });
+
+                    const searchRes = researchResponse.text;
+                    
+                    // Extract grounding chunks for display
+                    const chunks = researchResponse.candidates?.[0]?.groundingMetadata?.groundingChunks;
+                    if (chunks) {
+                        els.aiSourcesList.innerHTML = '';
+                        const uniqueSources = new Set();
+                        
+                        chunks.forEach(c => {
+                            if (c.web?.uri) uniqueSources.add(`<a href="${c.web.uri}" target="_blank" class="text-blue-400 hover:underline underline-offset-2">${c.web.title || c.web.uri}</a>`);
+                        });
+                        
+                        if (uniqueSources.size > 0) {
+                            els.aiSources.classList.remove('hidden');
+                            uniqueSources.forEach(link => {
+                                const li = document.createElement('li');
+                                li.innerHTML = link;
+                                els.aiSourcesList.appendChild(li);
+                            });
+                        }
+                    }
+
+                    researchData = `Verified API Documentation Data:\n${searchRes}\n\n`;
+                    
+                } catch (e) {
+                    console.warn("Research phase failed, falling back to internal knowledge.", e);
+                    researchData = "Note: Live documentation search failed. Relying on internal knowledge.\n";
+                }
+
+                // 5. Code Generation Phase
+                updateAiStatus("Generating code...", true);
+
+                const fullPrompt = `
+${researchData}
+
+User Request: "${prompt}"
+
+Current Project Files Context:
+${fileContext}
+
+Task: Generate the JSON update to satisfy the user request. Ensure you use the VERIFIED API details from the research above.
+`;
+
+                const response = await callWithRetry(async () => {
+                    return await ai.models.generateContent({
+                        model: "gemini-2.5-pro",
+                        contents: fullPrompt,
+                        config: {
+                            systemInstruction: SYSTEM_INSTRUCTION,
+                            responseMimeType: "application/json"
+                        }
+                    });
+                }, 3, (attempt, delay) => {
+                    updateAiStatus(`Model overloaded (Retry ${attempt})...`, true);
+                });
+
+                const jsonText = response.text;
+                let result;
+                try {
+                    result = JSON.parse(jsonText);
+                } catch(e) {
+                    throw new Error("AI returned invalid JSON. Try again.");
+                }
+
+                // Apply changes
+                if (result.files) {
+                    result.files.forEach(newFile => {
+                        const existing = appState.files.find(f => f.path === newFile.path);
+                        if (existing) {
+                            existing.content = newFile.content;
+                        } else {
+                            appState.files.push({ path: newFile.path, content: newFile.content, isBinary: false });
+                        }
+                    });
+                    
+                    renderFileTree();
+                    
+                    // If current file modified, reload it
+                    if (result.files.some(f => f.path === appState.selectedFile)) {
+                        loadFileContent(appState.selectedFile);
+                    }
+                    
+                    // If new main script, switch to it
+                    const mainScript = result.files.find(f => f.path.endsWith('.js'));
+                    if (mainScript && appState.selectedFile !== mainScript.path) {
+                        loadFileContent(mainScript.path);
+                    }
+                }
+
+                updateAiStatus("Done.", false);
+                els.aiExplanation.innerText = result.explanation || "Files updated successfully.";
+                els.aiPrompt.value = ''; // Clear input
+
+            } catch (error) {
+                console.error(error);
+                updateAiStatus("Error", false);
+                els.aiExplanation.innerText = `Failed: ${error.message || error}`;
+            } finally {
+                setAiLoading(false);
+            }
+        }
+
+        function setAiLoading(loading) {
+            appState.isLoading = loading;
+            if (loading) {
+                els.sendIcon.classList.add('hidden');
+                els.loadingIcon.classList.remove('hidden');
+                els.sendAiBtn.disabled = true;
+                els.aiPrompt.disabled = true;
+            } else {
+                els.sendIcon.classList.remove('hidden');
+                els.loadingIcon.classList.add('hidden');
+                els.sendAiBtn.disabled = false;
+                els.aiPrompt.disabled = false;
+                els.aiPrompt.focus();
+            }
+        }
+
+        function updateAiStatus(text, isPulse) {
+            els.aiStatusText.innerText = text;
+            if (isPulse) els.aiStatusText.classList.add('animate-pulse');
+            else els.aiStatusText.classList.remove('animate-pulse');
+        }
+
+        // --- DEBUGGER LOGIC ---
+
+        async function checkScript(path) {
+            const file = appState.files.find(f => f.path === path);
+            if (!file) return;
+            
+            const btn = els.debugBtn;
+            const originalText = btn.innerText;
+            btn.innerText = "Checking...";
+            btn.disabled = true;
+            
+            // UI Feedback
+            els.aiStatusContainer.classList.remove('hidden');
+            els.aiSources.classList.add('hidden');
+            updateAiStatus("Initializing Debugger...", true);
+
+            // Get user API Key
+            const apiKey = await getApiKey();
+            if (!apiKey) {
+                updateAiStatus("Error: API Key missing.", false);
+                els.aiExplanation.innerText = "Please select an API Key in Settings to debug.";
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            updateAiStatus("Debugging script with Live API lookup...", true);
+
+            try {
+                const ai = new GoogleGenAI({ apiKey });
+                
+                // Debugging also uses search now to verify validity
+                const debugResponse = await callWithRetry(async () => {
+                    return await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: `
+                        Check this Minecraft Bedrock script for errors.
+                        
+                        Script Path: ${path}
+                        Content:
+                        \`\`\`javascript
+                        ${file.content}
+                        \`\`\`
+                        
+                        Task:
+                        1. Search 'https://jaylydev.github.io/scriptapi-docs/latest/' to verify if the methods and events used exist in the latest version.
+                        2. Identify deprecated APIs (e.g., BeforeChatEvent vs ChatSendBeforeEvent).
+                        3. Report syntax errors or logical flaws.
+                        `,
+                        config: {
+                            tools: [{ googleSearch: {} }],
+                            systemInstruction: "You are a strict code reviewer for Minecraft Script API. You rely on the latest documentation.",
+                        }
+                    });
+                }, 3, (attempt) => {
+                    updateAiStatus(`Debugger busy (Retry ${attempt})...`, true);
+                });
+
+                updateAiStatus("Debug Result", false);
+                els.aiExplanation.innerText = debugResponse.text;
+                
+                // Show sources
+                const chunks = debugResponse.candidates?.[0]?.groundingMetadata?.groundingChunks;
+                if (chunks) {
+                    els.aiSourcesList.innerHTML = '';
+                    const uniqueSources = new Set();
+                    chunks.forEach(c => {
+                        if (c.web?.uri) uniqueSources.add(`<a href="${c.web.uri}" target="_blank" class="text-blue-400 hover:underline underline-offset-2">${c.web.title || c.web.uri}</a>`);
+                    });
+                    if (uniqueSources.size > 0) {
+                         els.aiSources.classList.remove('hidden');
+                         uniqueSources.forEach(link => {
+                            const li = document.createElement('li');
+                            li.innerHTML = link;
+                            els.aiSourcesList.appendChild(li);
+                        });
+                    }
+                }
+
+            } catch (e) {
+                updateAiStatus("Debug Error", false);
+                els.aiExplanation.innerText = e.message;
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- TEXTURE GENERATOR (FREE TIER - POLLINATIONS.AI) ---
+        
+        async function handleTextureGeneration() {
+            const prompt = els.texturePrompt.value.trim();
+            if (!prompt) return;
+            
+            const btn = els.generateTextureBtn;
+            btn.innerText = "Generating...";
+            btn.disabled = true;
+            els.textureError.classList.add('hidden');
+
+            // No API Key required for Pollinations.ai
+            
+            try {
+                // Construct URL for Pollinations.ai
+                // Appending pixel art style to ensure consistency
+                const enhancedPrompt = encodeURIComponent(`${prompt}, pixel art, minecraft style icon, 8bit`);
+                const url = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=512&height=512&nologo=true`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Image generation failed: ${response.statusText}`);
+                
+                const blob = await response.blob();
+                
+                // Convert Blob to Base64
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                
+                reader.onloadend = () => {
+                    const base64data = reader.result.split(',')[1]; // Remove data:image/png;base64, prefix
+                    
+                    if (base64data) {
+                        // Save to files
+                        const existingIdx = appState.files.findIndex(f => f.path === 'pack_icon.png');
+                        if (existingIdx >= 0) {
+                            appState.files[existingIdx].content = base64data;
+                        } else {
+                            appState.files.push({ path: 'pack_icon.png', content: base64data, isBinary: true });
+                        }
+                        
+                        renderFileTree();
+                        renderCurrentIcon();
+                        els.texturePrompt.value = '';
+                    } else {
+                         els.textureError.innerText = "Failed to process generated image.";
+                         els.textureError.classList.remove('hidden');
+                    }
+                    
+                    btn.innerText = "Generate Icon (Free)";
+                    btn.disabled = false;
+                };
+
+            } catch (e) {
+                els.textureError.innerText = e.message;
+                els.textureError.classList.remove('hidden');
+                btn.innerText = "Generate Icon (Free)";
+                btn.disabled = false;
+            }
+        }
+
+        function renderCurrentIcon() {
+            const iconFile = appState.files.find(f => f.path === 'pack_icon.png');
+            if (iconFile) {
+                els.currentPackIcon.src = `data:image/png;base64,${iconFile.content}`;
+                els.currentPackIcon.classList.remove('hidden');
+                els.noIconText.classList.add('hidden');
+            } else {
+                els.currentPackIcon.classList.add('hidden');
+                els.noIconText.classList.remove('hidden');
+            }
+        }
+
+        // --- EXPORT / IMPORT ---
+
+        async function downloadPack() {
+            els.downloadBtn.disabled = true;
+            els.downloadIcon.classList.add('hidden');
+            els.spinnerIcon.classList.remove('hidden');
+            els.downloadText.innerText = "Building...";
+
+            try {
+                const zip = new JSZip();
+                
+                // Ensure manifest is up to date in files
+                updateManifestFile();
+
+                appState.files.forEach(f => {
+                    if (f.isBinary) {
+                        zip.file(f.path, f.content, { base64: true });
+                    } else {
+                        zip.file(f.path, f.content);
+                    }
+                });
+
+                const content = await zip.generateAsync({ type: 'blob' });
+                const safeName = appState.config.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `${safeName}.mcpack`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.error(e);
+                alert("Failed to download pack");
+            } finally {
+                els.downloadBtn.disabled = false;
+                els.downloadIcon.classList.remove('hidden');
+                els.spinnerIcon.classList.add('hidden');
+                els.downloadText.innerText = "Download";
+            }
+        }
+
+        async function handleImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            els.importBtn.disabled = true;
+            
+            try {
+                const zip = await JSZip.loadAsync(file);
+                const newFiles = [];
+                let manifestFound = false;
+
+                const promises = [];
+                zip.forEach((relPath, entry) => {
+                    if (entry.dir) return;
+                    const p = (async () => {
+                        const isBinary = /\.(png|jpg|tga|fsb|bin)$/i.test(relPath);
+                        const content = isBinary ? await entry.async('base64') : await entry.async('string');
+                        newFiles.push({ path: relPath, content, isBinary });
+                        if (relPath === 'manifest.json') {
+                            manifestFound = true;
+                            try {
+                                const m = JSON.parse(content);
+                                appState.config.name = m.header.name.replace(' [BP]', '');
+                                appState.config.description = m.header.description;
+                                appState.config.version = m.header.version;
+                                appState.config.minEngineVersion = m.header.min_engine_version;
+                                appState.config.author = m.metadata?.authors?.[0] || 'Unknown';
+                                if (m.dependencies) appState.config.dependencies = m.dependencies;
+                            } catch(err) { console.error("Manifest parse error", err); }
+                        }
+                    })();
+                    promises.push(p);
+                });
+
+                await Promise.all(promises);
+                appState.files = newFiles;
+                
+                renderConfig();
+                renderFileTree();
+                
+                const main = newFiles.find(f => f.path.endsWith('.js') || f.path.endsWith('.json'));
+                if (main) loadFileContent(main.path);
+
+            } catch(err) {
+                alert("Failed to import: " + err.message);
+            } finally {
+                els.importBtn.disabled = false;
+                els.importInput.value = '';
+            }
+        }
+
+        // Run
         init();
 
     </script>
