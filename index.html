@@ -45,6 +45,10 @@
         @media (max-width: 768px) {
             ::-webkit-scrollbar { width: 4px; }
         }
+        
+        /* Folder arrow animation */
+        .folder-arrow { transition: transform 0.2s ease; }
+        .folder-open .folder-arrow { transform: rotate(90deg); }
     </style>
 <script type="importmap">
 {
@@ -97,8 +101,6 @@
 
     <main class="flex-grow flex flex-col md:flex-row h-full overflow-hidden relative">
         <!-- Sidebar / Drawer -->
-        <!-- On Mobile: Fixed full screen, hidden by default -->
-        <!-- On Desktop: Static width, always visible -->
         <aside id="sidebar" class="hidden fixed inset-0 z-40 w-full bg-background flex-col md:flex md:static md:w-72 lg:w-80 md:border-r border-subtle overflow-hidden">
             
             <!-- Mobile Sidebar Header -->
@@ -112,12 +114,12 @@
             </div>
 
             <!-- File Tree -->
-            <div class="flex-1 flex flex-col overflow-hidden min-h-[40%] border-b border-subtle bg-[#161e2e] md:bg-surface">
+            <div class="flex-1 flex flex-col overflow-hidden min-h-[40%] border-b border-subtle bg-[#111827] md:bg-background">
                  <div class="px-4 py-3 md:px-3 md:py-2 font-bold text-xs text-muted uppercase tracking-wider flex justify-between items-center bg-surface shrink-0">
                     <span>Files</span>
                     <button id="refresh-files" class="text-[10px] hover:text-white p-1" title="Refresh File List">REFRESH</button>
                 </div>
-                <div id="file-tree" class="flex-1 overflow-y-auto p-2"></div>
+                <div id="file-tree" class="flex-1 overflow-y-auto py-2 select-none"></div>
             </div>
             
             <!-- Configurator (Scrollable) -->
@@ -195,11 +197,16 @@
                  </div>
 
                  <!-- AI Panel -->
-                 <div class="flex flex-col gap-2 shrink-0 h-auto pb-safe">
+                 <div class="flex flex-col gap-2 shrink-0 h-auto pb-safe relative z-30">
+                    <!-- Suggestion Popup -->
+                    <div id="mention-popup" class="hidden absolute bottom-full left-0 w-full mb-2 bg-surface border border-muted rounded-lg shadow-2xl max-h-48 overflow-y-auto overflow-x-hidden z-50">
+                        <!-- Items injected by JS -->
+                    </div>
+
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2 text-sm text-primary">
                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.405 2.138a.75.75 0 01.638.92l-2.033 6.1a.75.75 0 01-1.33.001l-.85-2.55a.75.75 0 00-.4-1.033L5.28 2.97a.75.75 0 01.597-1.373l8.5 1.7a.75.75 0 011.028.841zM3.75 9.19L6.5 6.94l-2.75-2.25v4.5zM12.5 15.25a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75h-.008a.75.75 0 01-.75-.75v-.008zM15.25 12.5a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75v-.008a.75.75 0 00-.75-.75h-.008zM12.5 11.25a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75h-.008a.75.75 0 01-.75-.75v-.008zM9.75 15.25a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75v-.008a.75.75 0 00-.75-.75h-.008z" clip-rule="evenodd" /></svg>
-                           <p class="font-semibold">AI Assistant</p>
+                           <p class="font-semibold">AI Assistant <span class="text-xs text-gray-500 font-normal hidden md:inline">(Type @ to mention files)</span></p>
                         </div>
                         <button id="debug-btn" class="hidden bg-primary/20 text-primary hover:bg-primary/30 text-xs py-1.5 px-3 rounded transition-colors">Debug File</button>
                     </div>
@@ -207,9 +214,10 @@
                     <div class="relative">
                       <textarea
                         id="ai-prompt"
-                        placeholder="Ask to create/modify files..."
+                        placeholder="Ask to create/modify files... (Type @ for files)"
                         class="w-full p-3 pr-12 bg-surface border border-subtle rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-gray-300 text-base md:text-sm"
                         rows="2"
+                        autocomplete="off"
                       ></textarea>
                       <button
                         id="send-ai-btn"
@@ -280,6 +288,7 @@
                 ]
             },
             selectedFile: null,
+            expandedFolders: new Set(['scripts', 'entities', 'texts', 'textures']), // Default open common folders
             packIconBase64: null,
             isGenerating: false
         };
@@ -303,6 +312,7 @@ world.beforeEvents.chatSend.subscribe((eventData) => {
             mobileMenuBtn: document.getElementById('mobile-menu-btn'),
             closeSidebarBtn: document.getElementById('close-sidebar-btn'),
             sidebar: document.getElementById('sidebar'),
+            refreshFilesBtn: document.getElementById('refresh-files'),
             
             fileTree: document.getElementById('file-tree'),
             editor: document.getElementById('code-input'),
@@ -327,6 +337,7 @@ world.beforeEvents.chatSend.subscribe((eventData) => {
             aiStatus: document.getElementById('ai-status'),
             spinner: document.getElementById('ai-spinner'),
             sendIcon: document.getElementById('send-icon'),
+            mentionPopup: document.getElementById('mention-popup'),
             
             texturePrompt: document.getElementById('texture-prompt'),
             currentPackIcon: document.getElementById('current-pack-icon'),
@@ -364,6 +375,7 @@ world.beforeEvents.chatSend.subscribe((eventData) => {
             renderConfig();
             renderEditor();
             setupEventListeners();
+            setupMentionSystem();
 
             // Initial Tab
             switchTab('Files');
@@ -411,14 +423,37 @@ Constraints:
             const ai = getAIClient();
             if (!ai) return;
 
-            const fileContext = state.files
-                .filter(f => !f.isBinary && f.content.length < 5000) // Limit context size
-                .map(f => `File: ${f.path}\n---\n${f.content}\n---\n`)
-                .join("\n");
+            // Parse mentions from prompt (format: @filepath)
+            // If a file is mentioned, we MUST include it.
+            // If no files mentioned, we include small text files as context, up to a limit.
+            
+            const mentionedPaths = [];
+            const mentionRegex = /@([\w\/\.\-_]+)/g;
+            let match;
+            while((match = mentionRegex.exec(promptText)) !== null) {
+                mentionedPaths.push(match[1]);
+            }
+
+            let fileContext = "";
+            
+            if (mentionedPaths.length > 0) {
+                 // Only include explicitly mentioned files
+                 fileContext = state.files
+                    .filter(f => mentionedPaths.includes(f.path))
+                    .map(f => `File: ${f.path}\n---\n${f.isBinary ? '(Binary Data)' : f.content}\n---\n`)
+                    .join("\n");
+            } else {
+                // Auto-include logic: Include selected file + manifest + main.js if small enough
+                const importantFiles = ['manifest.json', 'scripts/main.js', state.selectedFile];
+                fileContext = state.files
+                    .filter(f => !f.isBinary && f.content.length < 8000 && (importantFiles.includes(f.path) || state.files.length < 5)) 
+                    .map(f => `File: ${f.path}\n---\n${f.content}\n---\n`)
+                    .join("\n");
+            }
 
             const fullPrompt = `User Request: "${promptText}"
 
-Current Project Files:
+Current Project Files Context:
 ${fileContext}
 
 Generate the necessary file updates/creations in JSON format.`;
@@ -476,7 +511,6 @@ Generate the necessary file updates/creations in JSON format.`;
         // ==========================================
         async function generatePollinationsImage(promptText) {
             const fullPrompt = `${promptText}, pixel art, minecraft style`;
-            // Pollinations URL structure
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=512&height=512&nologo=true`;
             
             const response = await fetch(url);
@@ -487,8 +521,6 @@ Generate the necessary file updates/creations in JSON format.`;
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                    // Result is "data:image/jpeg;base64,..."
-                    // Split to get just base64
                     resolve(reader.result.split(',')[1]); 
                 };
                 reader.onerror = reject;
@@ -529,14 +561,21 @@ Generate the necessary file updates/creations in JSON format.`;
                 state.packIconBase64 = content;
                 renderTexturePreview();
             }
+            
+            // Expand folders leading to this file
+            const parts = path.split('/');
+            if (parts.length > 1) {
+                let currentPath = "";
+                for(let i=0; i<parts.length-1; i++) {
+                    currentPath += (i===0 ? "" : "/") + parts[i];
+                    state.expandedFolders.add(currentPath);
+                }
+            }
         }
 
         async function downloadPack() {
             const zip = new JSZip();
-            
-            // Ensure manifest is up to date
             const manifest = generateManifest(state.config);
-            // Update manifest in files state first
             updateFileInState('manifest.json', JSON.stringify(manifest, null, 2));
 
             state.files.forEach(f => {
@@ -559,6 +598,7 @@ Generate the necessary file updates/creations in JSON format.`;
         async function importPack(file) {
             const zip = await JSZip.loadAsync(file);
             state.files = [];
+            state.expandedFolders.clear();
             
             const promises = [];
             
@@ -575,7 +615,6 @@ Generate the necessary file updates/creations in JSON format.`;
                     } else {
                         const content = await zipEntry.async('string');
                         state.files.push({ path: relativePath, content, isBinary: false });
-                        
                         if (relativePath === 'manifest.json') {
                             try {
                                 const m = JSON.parse(content);
@@ -595,6 +634,12 @@ Generate the necessary file updates/creations in JSON format.`;
             await Promise.all(promises);
             state.selectedFile = state.files.find(f => f.path.endsWith('.js'))?.path || state.files[0]?.path;
             
+            // Auto expand top level folders
+            state.files.forEach(f => {
+                const parts = f.path.split('/');
+                if(parts.length > 1) state.expandedFolders.add(parts[0]);
+            });
+
             renderFileTree();
             renderConfig();
             renderEditor();
@@ -602,7 +647,7 @@ Generate the necessary file updates/creations in JSON format.`;
         }
 
         // ==========================================
-        // UI Rendering
+        // UI Rendering: Hierarchical File Tree
         // ==========================================
 
         function toggleSidebar() {
@@ -611,39 +656,137 @@ Generate the necessary file updates/creations in JSON format.`;
         }
 
         function closeSidebar() {
-            // Only on mobile
             if (window.innerWidth < 768) {
                 els.sidebar.classList.add('hidden');
                 els.sidebar.classList.remove('flex');
             }
         }
 
+        // Build nested object structure from file list
+        function buildFileHierarchy(files) {
+            const root = [];
+            
+            const findOrAddFolder = (list, name, fullPath) => {
+                let folder = list.find(n => n.name === name && n.type === 'folder');
+                if (!folder) {
+                    folder = { name, type: 'folder', path: fullPath, children: [] };
+                    list.push(folder);
+                }
+                return folder;
+            };
+
+            files.forEach(file => {
+                const parts = file.path.split('/');
+                let currentLevel = root;
+                let currentPath = "";
+                
+                // Iterate all parts. Last part is file, others are folders
+                parts.forEach((part, index) => {
+                    const isFile = index === parts.length - 1;
+                    currentPath += (index === 0 ? "" : "/") + part;
+                    
+                    if (isFile) {
+                        currentLevel.push({ name: part, type: 'file', path: file.path });
+                    } else {
+                        const folder = findOrAddFolder(currentLevel, part, currentPath);
+                        currentLevel = folder.children;
+                    }
+                });
+            });
+
+            // Sort helper
+            const sortNodes = (nodes) => {
+                nodes.sort((a, b) => {
+                    if (a.type === b.type) return a.name.localeCompare(b.name);
+                    return a.type === 'folder' ? -1 : 1;
+                });
+                nodes.forEach(n => {
+                    if (n.children) sortNodes(n.children);
+                });
+            };
+            
+            sortNodes(root);
+            return root;
+        }
+
         function renderFileTree() {
             els.fileTree.innerHTML = '';
-            // Sort files
-            const sorted = [...state.files].sort((a, b) => a.path.localeCompare(b.path));
-            
-            sorted.forEach(file => {
-                const div = document.createElement('div');
-                const isSelected = file.path === state.selectedFile;
-                div.className = `flex items-center py-3 md:py-1 px-3 md:px-2 cursor-pointer text-sm truncate transition-colors ${isSelected ? 'bg-subtle text-white border-l-2 border-primary' : 'text-gray-400 hover:bg-surface'}`;
+            const hierarchy = buildFileHierarchy(state.files);
+
+            const createNodeElement = (node, depth) => {
+                const container = document.createElement('div');
                 
-                // Simple Icon Logic
-                let icon = '📄';
-                if (file.path.endsWith('.json')) icon = '🔧';
-                if (file.path.endsWith('.js')) icon = '📜';
-                if (file.path.endsWith('.png')) icon = '🖼️';
+                // Row Item
+                const row = document.createElement('div');
+                row.className = `flex items-center py-2 px-3 cursor-pointer transition-colors border-l-2 ${
+                    node.type === 'file' && node.path === state.selectedFile 
+                    ? 'bg-subtle text-white border-primary' 
+                    : 'text-gray-400 border-transparent hover:bg-surface hover:text-gray-200'
+                }`;
+                row.style.paddingLeft = `${depth * 12 + 12}px`; // Indentation
                 
-                div.textContent = `${icon} ${file.path}`;
-                div.onclick = () => {
-                    state.selectedFile = file.path;
-                    renderFileTree(); // Re-render for highlight
-                    renderEditor();
-                    closeSidebar(); // Close drawer on mobile
-                };
-                els.fileTree.appendChild(div);
+                // Icon
+                const icon = document.createElement('span');
+                icon.className = "mr-2 flex-shrink-0 w-5 text-center";
+                if (node.type === 'folder') {
+                    const isOpen = state.expandedFolders.has(node.path);
+                    row.className += isOpen ? " folder-open" : "";
+                    icon.innerHTML = `<svg class="w-4 h-4 folder-arrow text-gray-500 inline-block transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>`;
+                    row.onclick = (e) => {
+                        e.stopPropagation();
+                        if (state.expandedFolders.has(node.path)) {
+                            state.expandedFolders.delete(node.path);
+                        } else {
+                            state.expandedFolders.add(node.path);
+                        }
+                        renderFileTree();
+                    };
+                } else {
+                     // File Icon Logic
+                    let emoji = '📄';
+                    if (node.name.endsWith('.json')) emoji = '🔧';
+                    if (node.name.endsWith('.js')) emoji = '📜';
+                    if (node.name.endsWith('.png')) emoji = '🖼️';
+                    icon.textContent = emoji;
+                    
+                    row.onclick = () => {
+                        state.selectedFile = node.path;
+                        renderFileTree(); 
+                        renderEditor();
+                        closeSidebar();
+                    };
+                }
+
+                // Label
+                const label = document.createElement('span');
+                label.className = "truncate text-sm font-mono";
+                label.textContent = node.name;
+                if (node.type === 'folder') label.className += " font-bold text-yellow-500/80";
+
+                row.appendChild(icon);
+                row.appendChild(label);
+                container.appendChild(row);
+
+                // Children
+                if (node.type === 'folder' && state.expandedFolders.has(node.path) && node.children) {
+                    const childContainer = document.createElement('div');
+                    node.children.forEach(child => {
+                        childContainer.appendChild(createNodeElement(child, depth + 1));
+                    });
+                    container.appendChild(childContainer);
+                }
+                
+                return container;
+            };
+
+            hierarchy.forEach(node => {
+                els.fileTree.appendChild(createNodeElement(node, 0));
             });
         }
+
+        // ==========================================
+        // UI Rendering: Editor & Other
+        // ==========================================
 
         function renderEditor() {
             const file = state.files.find(f => f.path === state.selectedFile);
@@ -673,7 +816,6 @@ Generate the necessary file updates/creations in JSON format.`;
                 els.editor.value = file.content;
                 els.editorStats.textContent = `${file.content.length} chars`;
                 
-                // Show debug button only for JS
                 const debugBtn = document.getElementById('debug-btn');
                 if (file.path.endsWith('.js')) {
                     debugBtn.classList.remove('hidden');
@@ -702,7 +844,6 @@ Generate the necessary file updates/creations in JSON format.`;
                 els.depList.appendChild(row);
             });
             
-            // Attach listeners to dynamic inputs
             els.depList.querySelectorAll('input').forEach(input => {
                 input.onchange = (e) => {
                     const idx = parseInt(e.target.dataset.idx);
@@ -757,12 +898,89 @@ Generate the necessary file updates/creations in JSON format.`;
         }
 
         // ==========================================
+        // Feature: @ Mention System
+        // ==========================================
+        function setupMentionSystem() {
+            const input = els.aiPrompt;
+            const popup = els.mentionPopup;
+
+            const hidePopup = () => {
+                popup.classList.add('hidden');
+            };
+
+            const insertMention = (filepath) => {
+                const cursor = input.selectionStart;
+                const text = input.value;
+                const lastAt = text.lastIndexOf('@', cursor - 1);
+                
+                if (lastAt !== -1) {
+                    const before = text.substring(0, lastAt);
+                    const after = text.substring(cursor);
+                    input.value = `${before}@${filepath} ${after}`;
+                    input.focus();
+                    hidePopup();
+                }
+            };
+
+            input.addEventListener('input', () => {
+                const cursor = input.selectionStart;
+                const text = input.value;
+                
+                // Check if we are typing a mention
+                const lastAt = text.lastIndexOf('@', cursor - 1);
+                if (lastAt !== -1) {
+                    const query = text.substring(lastAt + 1, cursor);
+                    // Simple heuristic: if query contains space, stop suggesting
+                    if (query.includes(' ') || query.includes('\n')) {
+                        hidePopup();
+                        return;
+                    }
+
+                    // Filter files
+                    const matches = state.files
+                        .filter(f => f.path.toLowerCase().includes(query.toLowerCase()))
+                        .slice(0, 10); // Limit to 10 results
+
+                    if (matches.length > 0) {
+                        popup.innerHTML = '';
+                        matches.forEach(file => {
+                            const div = document.createElement('div');
+                            div.className = "px-3 py-2 text-sm hover:bg-primary hover:text-white cursor-pointer flex items-center border-b border-gray-700 last:border-0";
+                            div.innerHTML = `<span class="mr-2 text-gray-400">📄</span> ${file.path}`;
+                            div.onclick = (e) => {
+                                e.preventDefault(); // Prevent focus loss issues
+                                insertMention(file.path);
+                            };
+                            // Mobile touch handling
+                            div.ontouchstart = (e) => {
+                                e.preventDefault();
+                                insertMention(file.path);
+                            };
+                            popup.appendChild(div);
+                        });
+                        popup.classList.remove('hidden');
+                    } else {
+                        hidePopup();
+                    }
+                } else {
+                    hidePopup();
+                }
+            });
+
+            // Hide on blur, but allow click to register first
+            input.addEventListener('blur', () => {
+                setTimeout(hidePopup, 200);
+            });
+        }
+
+        // ==========================================
         // Event Listeners
         // ==========================================
         function setupEventListeners() {
             // Mobile Menu
             els.mobileMenuBtn.onclick = toggleSidebar;
             els.closeSidebarBtn.onclick = toggleSidebar;
+            els.refreshFilesBtn.onclick = renderFileTree;
 
             // Tab Switching
             els.tabFiles.onclick = () => switchTab('Files');
