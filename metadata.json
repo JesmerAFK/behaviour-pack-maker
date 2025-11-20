@@ -1,0 +1,5 @@
+{
+  "name": "Bedrock Pack Studio",
+  "description": "An AI-powered application to generate Minecraft Bedrock behavior and resource packs with custom scripts and textures.",
+  "requestFramePermissions": []
+}
