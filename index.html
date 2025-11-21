@@ -695,6 +695,30 @@
                         class="flex-1 py-3 text-sm font-bold rounded transition-all text-gray-400 hover:text-white">Icon</button>
                 </div>
 
+                <!-- Mobile Actions (Always Visible) -->
+                <div class="flex md:hidden items-center gap-2 ml-auto">
+                    <button onclick="app.help.toggle()"
+                        class="bg-surface2 hover:bg-primary text-white w-8 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors"
+                        title="Help">
+                        ?
+                    </button>
+                    <button onclick="document.getElementById('import-file').click()"
+                        class="bg-surface2 hover:bg-gray-600 text-white p-2 rounded-lg text-xs font-bold"
+                        title="Import">
+                        📥
+                    </button>
+                    <button onclick="app.export.zip()"
+                        class="bg-surface2 hover:bg-gray-600 text-white p-2 rounded-lg text-xs font-bold"
+                        title="Download .zip">
+                        📦
+                    </button>
+                    <button onclick="app.export.mcpack()"
+                        class="bg-primary hover:bg-primary-dark text-white p-2 rounded-lg text-xs font-bold"
+                        title="Export .mcpack">
+                        🎮
+                    </button>
+                </div>
+
                 <!-- Desktop Title -->
                 <div class="hidden md:flex items-center text-sm font-bold text-gray-400">
                     <button onclick="app.router.go('home')" class="hover:text-white mr-2">Studio</button> / <span
@@ -810,12 +834,20 @@
                                 <input id="ai-prompt" type="text"
                                     class="w-full bg-background border border-surface2 rounded-lg pl-4 pr-12 py-3 text-base md:text-sm focus:border-primary focus:outline-none text-white placeholder-gray-500 transition-all"
                                     placeholder="Ask AI to edit this file... (or drag file here)">
-                                <button onclick="app.ai.generateCode()"
+                                <button id="ai-generate-btn" onclick="app.ai.generateCode()"
                                     class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </button>
+                                <button id="ai-stop-btn" onclick="app.ai.stopGeneration()"
+                                    class="hidden absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
@@ -2026,6 +2058,36 @@
                     return new GoogleGenAI({ apiKey: key });
                 },
 
+                isGenerating: false,
+                abortController: null,
+                animationInterval: null,
+
+                stopGeneration() {
+                    if (this.isGenerating) {
+                        this.isGenerating = false;
+
+                        // Clear animation interval immediately
+                        if (this.animationInterval) {
+                            clearInterval(this.animationInterval);
+                            this.animationInterval = null;
+                        }
+
+                        // Toggle buttons
+                        document.getElementById('ai-generate-btn').classList.remove('hidden');
+                        document.getElementById('ai-stop-btn').classList.add('hidden');
+
+                        // Show stopped message
+                        const status = document.getElementById('ai-status');
+                        status.innerHTML = '🛑 <span class="text-yellow-400 font-bold">AI generation has been stopped</span>';
+                        status.classList.remove('hidden');
+
+                        // Hide message after 3 seconds
+                        setTimeout(() => {
+                            status.classList.add('hidden');
+                        }, 3000);
+                    }
+                },
+
                 async generateCode() {
                     const promptInput = document.getElementById('ai-prompt');
                     const status = document.getElementById('ai-status');
@@ -2034,13 +2096,20 @@
                     const promptText = promptInput.value.trim();
                     if (!promptText) return;
 
+                    // Prevent multiple simultaneous generations
+                    if (this.isGenerating) return;
+                    this.isGenerating = true;
+                    this.abortController = new AbortController();
+
+                    // Toggle buttons
+                    document.getElementById('ai-generate-btn').classList.add('hidden');
+                    document.getElementById('ai-stop-btn').classList.remove('hidden');
+
                     // Close suggestion box if open
                     document.getElementById('suggestion-box').classList.remove('visible');
 
                     // Reset Summary
                     if (summaryPanel) summaryPanel.classList.add('hidden');
-
-                    let interval;
 
                     try {
                         status.classList.remove('hidden');
@@ -2050,8 +2119,8 @@
                         const action = content.trim().length > 0 ? "Editing" : "Creating";
                         const startTime = Date.now();
 
-                        // Animation Loop
-                        interval = setInterval(() => {
+                        // Animation Loop - store reference so stopGeneration can clear it
+                        this.animationInterval = setInterval(() => {
                             const elapsed = Math.floor((Date.now() - startTime) / 1000);
                             const frame = Math.floor((Date.now() - startTime) / 100) % 10;
                             const bars = '❚'.repeat(frame + 1);
@@ -2148,6 +2217,11 @@
                             contents: systemPrompt
                         });
 
+                        // Check if generation was aborted while waiting for response
+                        if (!this.isGenerating) {
+                            return; // User stopped generation, don't process response
+                        }
+
                         // Parsing Response
                         const responseText = response.text;
                         const parts = responseText.split('>>> CODE');
@@ -2210,10 +2284,22 @@
                             alert("Gemini API Quota Exceeded.\n\nYou are sending too many requests or have used too many tokens. Please wait a minute and try again.");
                         }
 
-                        status.innerHTML = `<span class="text-red-400 font-bold">${errorMsg}</span>`;
-                        status.classList.remove('hidden');
+                        // Only show error if not aborted by user
+                        if (e.name !== 'AbortError') {
+                            status.innerHTML = `<span class="text-red-400 font-bold">${errorMsg}</span>`;
+                            status.classList.remove('hidden');
+                        }
                     } finally {
-                        if (interval) clearInterval(interval);
+                        if (this.animationInterval) {
+                            clearInterval(this.animationInterval);
+                            this.animationInterval = null;
+                        }
+
+                        // Reset generation state and buttons
+                        this.isGenerating = false;
+                        this.abortController = null;
+                        document.getElementById('ai-generate-btn').classList.remove('hidden');
+                        document.getElementById('ai-stop-btn').classList.add('hidden');
                     }
                 },
 
@@ -2235,6 +2321,16 @@
                         reader.onloadend = () => {
                             const base64 = reader.result.split(',')[1];
                             app.files.add('pack_icon.png', base64, true);
+
+                            // Update icon preview
+                            const preview = document.getElementById('icon-preview-img');
+                            const placeholder = document.getElementById('icon-placeholder');
+                            if (preview && placeholder) {
+                                preview.src = reader.result;
+                                preview.classList.remove('hidden');
+                                placeholder.classList.add('hidden');
+                            }
+
                             btn.innerText = originalText;
                             btn.disabled = false;
                         };
