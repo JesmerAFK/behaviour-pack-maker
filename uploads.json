@@ -1,0 +1,48 @@
+[
+    {
+        "id": "server-essential-menu",
+        "title": "Server Essential Menu",
+        "author": "JMAFK",
+        "type": "Addon",
+        "thumbnail": "https://media.forgecdn.net/attachments/1310/355/1000054468-png.png",
+        "description": "The ultimate menu system for Bedrock servers. Includes warps, TPA, and admin tools.",
+        "long_description": "# Server Essential Menu\n\nThis addon provides a comprehensive GUI menu for your server or realm.\n\n## Features\n- **Teleport System:** Warp to hubs and custom locations.\n- **TPA:** Request to teleport to other players.\n- **Admin Tools:** Ban, kick, and manage the server easily.\n\n## Installation\n1. Download the pack.\n2. Import into Minecraft.\n3. Apply to your world.",
+        "youtube_url": "https://www.youtube.com/watch?v=gULH54-JQLA&t=16s",
+        "download_url": "https://www.curseforge.com/minecraft-bedrock/addons/server-essential-menu"
+    },
+    {
+        "id": "casino-jmafkbedrock",
+        "title": "Casino System [JMAFK]",
+        "author": "JMAFK",
+        "type": "Script",
+        "thumbnail": "https://media.forgecdn.net/attachments/1372/653/clans-png.png",
+        "description": "A fully functional economy and gambling script. Add slots and blackjack to your world.",
+        "long_description": "# CASINO ADD-ON FOR MINECRAFT BEDROCK\n\n✨ **New UI design**  \n⚙️ **Customizable**  \n🎮 **Easy to use**\n\n---\n\n## How to use the add-on?\n\n1. Import it to your world\n2. Enable it on the behaviour pack and resourcepack\n3. Enable **beta-api** on the experimentation tab\n4. Enable **cheats** to send command\n\n---\n\n## How to use it inside the world?\n\n- Get a **gold ingot** to open the UI\n- If you have a money system in the world, you can configure the system by changing its scoreboard\n- Tag yourself admin by sending this on chat: `/tag @s add admin`\n- Crouch and right-click the gold ingot to open the config form\n- If you have no money you can send this in chat: `/scoreboard players add @s money 10000`\n\n---\n\n## 🎮 Join my Community on Discord:\n**🔗 https://discord.gg/CtKukG3Jeu**\n\n## 💬 Need Help or Have Questions?\nDM me on my server — **@JMAFK BEDROCK**",
+        "youtube_url": "https://www.youtube.com/watch?v=65pvTkxmb6Y&t=14s",
+        "download_url": "https://www.curseforge.com/minecraft-bedrock/scripts/casino-jmafkbedrock",
+        "key": "JMAFK-BEDROCK-2025"
+    },
+    {
+        "id": "advance-land-claim",
+        "title": "Advance Land Claim",
+        "author": "JMAFK",
+        "type": "Addon",
+        "thumbnail": "https://media.forgecdn.net/attachments/1112/366/screenshot-2025-03-02-073331-png.png",
+        "description": "Protect your builds! Advanced plot protection and land claiming for multiplayer.",
+        "long_description": "# Advance Land Claim\n\nStop griefers instantly.\n\n## How to use\n1. Get the claiming tool.\n2. Select corner A and corner B.\n3. Type `/claim` to protect your area.\n\nIncludes permission sharing with friends!",
+        "youtube_url": "https://www.youtube.com/watch?v=WYS-bBo89LE&t=13s",
+        "download_url": "https://www.curseforge.com/minecraft-bedrock/addons/advance-land-claim-plot-protection"
+    },
+    {
+        "id": "proximity-chat",
+        "title": "Below Name & Proximity Chat",
+        "author": "JMAFK",
+        "type": "Script",
+        "thumbnail": "https://media.forgecdn.net/attachments/1381/415/screenshot-2025-11-04-195109-png.png",
+        "description": "Immersive chat features. See messages below player names and chat based on distance.",
+        "long_description": "# 💬 Minecraft Bedrock Chat Addon\n\n### 🧭 Overview\n\nThe **Minecraft Bedrock Chat Addon** is a complete communication system designed to enhance player interaction, organization, and immersion. It adds multiple chat modes, a below-name message display, full rank integration, and advanced chat filtering — perfect for survival, roleplay, or clan-based servers.\n\n---\n\n## 🌐 Key Features\n\n### 💭 Multiple Chat Modes\n\nCommunicate easily through various modes:\n\n- **Global Chat** – Talk to everyone on the server\n- **Clan Chat** – Chat privately with your clan\n- **Nearby Chat** – Local range chat (default 100 blocks)\n- **Private Messages** – Send direct player-to-player messages\n- **Below-Name Chat** – Show short messages under name tags\n\n## 💬 How to Use Chat Commands\n\nUse these commands to switch between chat modes quickly:\n\n- `/chat g` → Switch to **Global Chat** (talk to all players)\n- `/chat c` → Switch to **Clan Chat** (talk only to your clan members)\n- `/chat n` → Switch to **Nearby Chat** (talk within your area range)\n- `/chat b` → Switch to **Below-Name Chat** (show message under your nametag only)\n- `/chat` → Cycle through available chat modes\n- `/r` → Reply to the last private message\n- `/chatadmin` → Open the admin settings panel (operator only)\n- `/chatdebug` → Debug rank display and below-name info\n\n---\n\n### 🏷️ Below-Name Display System\n\n- Displays player's last message under their nametag\n- Customizable colors, prefixes, and message duration\n- Optional health or heart indicators\n- Truncates long messages for readability\n\n---\n\n### 🎖️ Rank Display System\n\n- Integrates with **clan and rank systems**\n- Supports player tag–based ranks (e.g., `rank:Admin`)\n- Customizable display per chat mode\n- Automatic bracket removal and fallback glyphs\n\n---\n\n### 🚫 Chat Filtering & Protection\n\nKeep your server chat clean and fair with:\n\n- **Anti-Spam System** – Message rate limits, similarity detection, auto-muting\n- **Banned Words Filter** – Blocks or censors offensive text\n- **Warning System** – Optional detention/ban integration\n\n---\n\n### ⚙️ Admin Configuration Panel\n\nManage everything in-game using `/chatadmin`:\n\n- Customize chat formats, ranks, filters, and below-name settings\n- Enable or disable integrations\n- Save and load configurations automatically\n- Reset to default with one click\n\n---\n\n### 🔗 System Integration\n\n- Compatible with **clan**, **bounty**, and **rank** systems\n- Optional toggles for external integrations\n- Fully script-based and optimized for performance\n\n---\n\n### 💡 Advanced Features\n\n- **Suppress Nearby Chat** – Local players see only nametag messages\n- **Quick Reply** – `/r` to reply instantly to private messages\n- **Welcome Messages** – Greet new players automatically\n- **Debug Mode** – Detailed console logs for admins\n\n---\n\n## 🧩 Technical Details\n\n### 💾 Database Storage\n\n- Saves settings using **dynamic world properties**\n- Automatically loads configurations on world start\n\n---\n\n## 📥 Installation & Usage\n\n1. **Download** the addon files\n2. **Install** them into your world's behavior pack folder\n3. **Activate** using `/activate`\n4. **Configure** via `/chatadmin` (admin only)\n5. **Enjoy** your enhanced chat system!\n\n---\n\n## 🔗 Links\n\n- **Discord:** https://discord.com/invite/CtKukG3Jeu\n- **YouTube:** https://www.youtube.com/@JMAFKBedrock\n\n---\n\n**Version:** 1.0.0  \n**Author:** JMAFKBEDROCK  \n**License:** All rights reserved",
+        "youtube_url": "https://www.youtube.com/watch?v=PsAbxJ6-rJ8&t=28s",
+        "download_url": "https://www.curseforge.com/minecraft-bedrock/scripts/below-name-chat-proximity-chat-jmafk",
+        "key": "jmafk-bedrock-chataddon-2025"
+    }
+]

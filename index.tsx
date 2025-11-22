@@ -1,16 +1,3 @@
-
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
-
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// The application logic has been moved to index.html (Vanilla JS implementation).
+// This file is intentionally left empty of logic to prevent conflicts.
+console.log("Bedrock Pack Studio: Running in Vanilla JS mode.");
