@@ -1,0 +1,36 @@
+functionsDirectory = "/opt/build/repo/netlify/functions"
+functionsDirectoryOrigin = "default"
+headers = []
+redirects = []
+
+[build]
+publish = "/opt/build/repo/dist"
+publishOrigin = "ui"
+commandOrigin = "ui"
+command = "npm run build"
+functions = "/opt/build/repo/netlify/functions"
+
+  [build.environment]
+
+  [build.processing]
+
+    [build.processing.css]
+
+    [build.processing.html]
+
+    [build.processing.images]
+
+    [build.processing.js]
+
+  [build.services]
+
+[functions]
+
+  [functions."*"]
+
+[[plugins]]
+origin = "ui"
+package = "@netlify/plugin-lighthouse"
+pinned_version = "6"
+
+  [plugins.inputs]
