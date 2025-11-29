@@ -243,7 +243,6 @@
             margin-left: auto;
         }
     </style>
-
     <script type="importmap">
 {
   "imports": {
@@ -254,7 +253,6 @@
   }
 }
 </script>
-<script type="module" src="script.js"></script>
 </head>
 
 <body
@@ -502,23 +500,19 @@
                         </h3>
 
                         <!-- Comment Form -->
-                        <form onsubmit="app.hub.postComment(event)"
-                            class="mb-8 bg-surface1/50 p-6 rounded-xl border border-surface2">
+                        <form onsubmit="app.hub.postComment(event)" class="mb-8 bg-surface1/50 p-6 rounded-xl border border-surface2">
                             <div class="flex gap-4 mb-4">
                                 <input type="text" name="username" placeholder="Your Username" required
                                     class="bg-surface border border-surface2 rounded-lg px-4 py-2.5 text-white text-sm w-full md:w-1/3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
                             </div>
 
-                            <div id="comment-reply-indicator"
-                                class="hidden mb-3 text-sm text-primary flex items-center gap-2 bg-primary/10 p-2 rounded-lg inline-block">
+                            <div id="comment-reply-indicator" class="hidden mb-3 text-sm text-primary flex items-center gap-2 bg-primary/10 p-2 rounded-lg inline-block">
                                 <span>↩ Replying to <span id="replying-to-user" class="font-bold"></span></span>
-                                <button type="button" onclick="app.hub.cancelReply()"
-                                    class="text-gray-400 hover:text-white ml-2">✕ Cancel</button>
+                                <button type="button" onclick="app.hub.cancelReply()" class="text-gray-400 hover:text-white ml-2">✕ Cancel</button>
                             </div>
                             <input type="hidden" name="parentId" id="comment-parent-id">
 
-                            <textarea name="content" rows="3" placeholder="Share your thoughts..." required
-                                id="comment-content"
+                            <textarea name="content" rows="3" placeholder="Share your thoughts..." required id="comment-content"
                                 class="w-full bg-surface border border-surface2 rounded-lg px-4 py-3 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none mb-3 transition-all"></textarea>
 
                             <div class="flex justify-end">
@@ -1058,6 +1052,1028 @@
         </div>
     </div>
 
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // --- CONFIGURATION ---
+        const STORAGE_KEY = 'jmafk_project_data_v2';
+        const API_KEY_STORAGE = 'jmafk_api_key';
+
+        const DEFAULT_MANIFEST = {
+            format_version: 2,
+            header: {
+                name: "New Pack",
+                description: "Created with JMAFK Maker",
+                uuid: crypto.randomUUID(),
+                version: [1, 0, 0],
+                min_engine_version: [1, 21, 0]
+            },
+            modules: [
+                { type: "data", uuid: crypto.randomUUID(), version: [1, 0, 0] },
+                { type: "script", uuid: crypto.randomUUID(), version: [1, 0, 0], entry: "scripts/main.js" }
+            ],
+            dependencies: [
+                { module_name: "@minecraft/server", version: "2.4.0-beta" }, 
+                { module_name: "@minecraft/server-ui", version: "2.1.0-beta" }
+            ]
+        };
+
+        const DEFAULT_SCRIPT = `import { world, system } from "@minecraft/server";\n\nworld.afterEvents.worldLoad.subscribe(() => {\n    console.warn("Hello from JMAFK Maker!");\n});`;
+
+        const app = {
+            state: {
+                view: 'hub', 
+                files: [],
+                config: JSON.parse(JSON.stringify(DEFAULT_MANIFEST)),
+                selectedFile: null,
+                mobileTab: 'files',
+                hubData: [], 
+                currentPost: null 
+            },
+
+            async init() {
+                await this.persistence.load();
+                this.bindEvents();
+
+                if (this.state.files.length === 0) {
+                    this.files.add('manifest.json', JSON.stringify(this.state.config, null, 2));
+                    this.files.add('scripts/main.js', DEFAULT_SCRIPT);
+                }
+
+                if (this.state.view === 'workspace') {
+                    this.files.renderList();
+                }
+
+                this.router.render(); 
+
+                if (this.state.view === 'hub') {
+                    this.hub.init();
+                }
+
+                this.settings.checkStatus();
+                this.initViewerCount();
+            },
+
+            async initViewerCount() {
+                try {
+                    const hasVisited = sessionStorage.getItem('hasVisited');
+                    if (!hasVisited) {
+                        await fetch('/.netlify/functions/view-count', { method: 'POST' });
+                        sessionStorage.setItem('hasVisited', 'true');
+                    }
+                    const res = await fetch('/.netlify/functions/view-count');
+                    const data = await res.json();
+                    const el = document.querySelector('#viewer-count-display span');
+                    if (el) el.innerText = data.count.toLocaleString();
+                } catch (e) {
+                    console.error("Viewer count error:", e);
+                }
+            },
+
+            bindEvents() {
+                // Menu Toggles
+                const toggleMenu = () => {
+                    const menu = document.getElementById('mobile-menu');
+                    const overlay = document.getElementById('mobile-overlay');
+                    const isClosed = menu.classList.contains('menu-closed');
+
+                    menu.classList.toggle('menu-closed', !isClosed);
+                    menu.classList.toggle('menu-open', isClosed);
+                    overlay.classList.toggle('hidden', !isClosed);
+                };
+
+                document.getElementById('hamburger-btn').onclick = toggleMenu;
+                document.getElementById('close-menu-btn').onclick = toggleMenu;
+                document.getElementById('mobile-overlay').onclick = toggleMenu;
+
+                // Editor
+                const editor = document.getElementById('code-editor');
+                editor.addEventListener('input', (e) => {
+                    if (this.state.selectedFile) this.files.update(this.state.selectedFile, e.target.value);
+                });
+
+                document.getElementById('import-file').addEventListener('change', (e) => this.import.handle(e));
+
+                // Drag & Drop Support 
+                const body = document.body;
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    body.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.target.id !== 'ai-prompt') {
+                            body.classList.add('dragging-over');
+                        }
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    body.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        body.classList.remove('dragging-over');
+                    }, false);
+                });
+
+                body.addEventListener('drop', (e) => {
+                    if (e.target.id === 'ai-prompt') return; 
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        this.import.processFile(e.dataTransfer.files[0]);
+                    }
+                }, false);
+
+                // AI Prompt Logic
+                const aiPrompt = document.getElementById('ai-prompt');
+                const suggestionBox = document.getElementById('suggestion-box');
+
+                if (aiPrompt) {
+                    aiPrompt.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        aiPrompt.classList.add('ring-2', 'ring-primary', 'bg-surface2');
+                    });
+                    aiPrompt.addEventListener('dragleave', (e) => {
+                        e.preventDefault();
+                        aiPrompt.classList.remove('ring-2', 'ring-primary', 'bg-surface2');
+                    });
+                    aiPrompt.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        aiPrompt.classList.remove('ring-2', 'ring-primary', 'bg-surface2');
+
+                        const text = e.dataTransfer.getData('text/plain');
+                        if (text && text.startsWith('@')) {
+                            this.insertAtCursor(aiPrompt, text);
+                        }
+                    });
+
+                    aiPrompt.addEventListener('input', (e) => {
+                        const val = aiPrompt.value;
+                        const cursor = aiPrompt.selectionStart;
+                        const leftSide = val.slice(0, cursor);
+                        const wordMatch = leftSide.match(/@[\w\-\.\/]*$/);
+
+                        if (wordMatch) {
+                            const query = wordMatch[0].substring(1).toLowerCase();
+                            const suggestions = [];
+                            const seen = new Set();
+
+                            app.state.files.forEach(f => {
+                                if (f.path.toLowerCase().includes(query)) {
+                                    suggestions.push({ type: 'file', text: f.path });
+                                    seen.add(f.path);
+                                }
+                            });
+
+                            app.state.files.forEach(f => {
+                                const parts = f.path.split('/');
+                                let current = '';
+                                for (let i = 0; i < parts.length - 1; i++) {
+                                    current += (current ? '/' : '') + parts[i];
+                                    if (!seen.has(current) && current.toLowerCase().includes(query)) {
+                                        suggestions.push({ type: 'folder', text: current });
+                                        seen.add(current);
+                                    }
+                                }
+                            });
+
+                            suggestions.sort((a, b) => a.text.localeCompare(b.text));
+
+                            if (suggestions.length > 0) {
+                                this.renderSuggestions(suggestions, wordMatch[0]);
+                            } else {
+                                suggestionBox.classList.remove('visible');
+                            }
+                        } else {
+                            suggestionBox.classList.remove('visible');
+                        }
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        if (e.target !== aiPrompt && e.target !== suggestionBox) {
+                            suggestionBox.classList.remove('visible');
+                        }
+                    });
+
+                    aiPrompt.addEventListener('keydown', (e) => {
+                        if (suggestionBox.classList.contains('visible')) {
+                            const items = suggestionBox.querySelectorAll('.suggestion-item');
+                            const active = suggestionBox.querySelector('.suggestion-item.selected');
+                            let index = Array.from(items).indexOf(active);
+
+                            if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                index = (index + 1) % items.length;
+                                items.forEach(i => i.classList.remove('selected'));
+                                items[index].classList.add('selected');
+                                items[index].scrollIntoView({ block: 'nearest' });
+                            } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                index = (index - 1 + items.length) % items.length;
+                                items.forEach(i => i.classList.remove('selected'));
+                                items[index].classList.add('selected');
+                                items[index].scrollIntoView({ block: 'nearest' });
+                            } else if (e.key === 'Enter' && active) {
+                                e.preventDefault();
+                                active.click();
+                            } else if (e.key === 'Escape') {
+                                suggestionBox.classList.remove('visible');
+                            }
+                        } else if (e.key === 'Enter') {
+                            app.ai.generateCode();
+                        }
+                    });
+                }
+            },
+
+            insertAtCursor(input, text) {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const val = input.value;
+
+                const prefix = (start > 0 && val[start - 1] !== ' ') ? ' ' : '';
+                const suffix = (end < val.length && val[end] !== ' ') ? ' ' : '';
+
+                const newText = prefix + text + suffix;
+                input.value = val.substring(0, start) + newText + val.substring(end);
+
+                const newPos = start + newText.length - suffix.length;
+                input.focus();
+                input.setSelectionRange(newPos, newPos);
+            },
+
+            renderSuggestions(list, trigger) {
+                const box = document.getElementById('suggestion-box');
+                box.innerHTML = '';
+
+                list.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = `suggestion-item ${idx === 0 ? 'selected' : ''}`;
+                    const icon = item.type === 'folder' ? '📁' : '📄';
+
+                    div.innerHTML = `
+                        <span class="suggestion-icon">${icon}</span>
+                        <span>${item.text}</span>
+                        <span class="suggestion-type">${item.type}</span>
+                    `;
+
+                    div.onclick = () => {
+                        const aiPrompt = document.getElementById('ai-prompt');
+                        const val = aiPrompt.value;
+                        const cursor = aiPrompt.selectionStart;
+                        const left = val.slice(0, cursor);
+                        const right = val.slice(cursor);
+
+                        const newLeft = left.replace(/@[\w\-\.\/]*$/, '');
+                        const insertText = `@${item.text}${item.type === 'folder' ? '/' : ''} `;
+
+                        aiPrompt.value = newLeft + insertText + right;
+                        const newPos = newLeft.length + insertText.length;
+                        aiPrompt.focus();
+                        aiPrompt.setSelectionRange(newPos, newPos);
+                        box.classList.remove('visible');
+                    };
+
+                    box.appendChild(div);
+                });
+
+                box.classList.add('visible');
+            },
+
+            router: {
+                go(viewId) {
+                    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+                    
+                    // Update Nav State
+                    const navHub = document.getElementById('nav-hub');
+                    const navStudio = document.getElementById('nav-studio');
+                    
+                    if (viewId === 'hub' || viewId === 'post') {
+                         if(navHub) { navHub.classList.add('bg-surface2', 'text-white', 'shadow-sm'); navHub.classList.remove('text-gray-400'); }
+                         if(navStudio) { navStudio.classList.remove('bg-surface2', 'text-white', 'shadow-sm'); navStudio.classList.add('text-gray-400'); }
+                    } else {
+                         if(navHub) { navHub.classList.remove('bg-surface2', 'text-white', 'shadow-sm'); navHub.classList.add('text-gray-400'); }
+                         if(navStudio) { navStudio.classList.add('bg-surface2', 'text-white', 'shadow-sm'); navStudio.classList.remove('text-gray-400'); }
+                    }
+
+                    app.state.view = viewId;
+                    
+                    if (viewId === 'workspace') {
+                        app.files.renderList();
+                    }
+                },
+                render() {
+                    this.go(app.state.view);
+                }
+            },
+
+            persistence: {
+                async save() {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        files: app.state.files,
+                        config: app.state.config
+                    }));
+                },
+                async load() {
+                    const data = localStorage.getItem(STORAGE_KEY);
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        app.state.files = parsed.files || [];
+                        app.state.config = parsed.config || DEFAULT_MANIFEST;
+                    }
+                }
+            },
+
+            files: {
+                add(path, content) {
+                    const existing = app.state.files.find(f => f.path === path);
+                    if (existing) {
+                        existing.content = content;
+                    } else {
+                        app.state.files.push({ path, content });
+                    }
+                    app.persistence.save();
+                    this.renderList();
+                },
+                update(path, content) {
+                    const f = app.state.files.find(f => f.path === path);
+                    if (f) f.content = content;
+                    app.persistence.save();
+                    // Don't re-render list on content update to avoid jitter
+                },
+                select(path) {
+                    app.state.selectedFile = path;
+                    const file = app.state.files.find(f => f.path === path);
+                    const editor = document.getElementById('code-editor');
+                    const label = document.getElementById('current-file-label');
+                    const preview = document.getElementById('image-preview');
+                    const previewImg = document.getElementById('image-preview-el');
+
+                    if (file) {
+                        label.innerText = file.path;
+                        if (file.path.endsWith('.png')) {
+                            editor.classList.add('hidden');
+                            preview.classList.remove('hidden');
+                            previewImg.src = `data:image/png;base64,${file.content}`;
+                        } else {
+                            editor.classList.remove('hidden');
+                            preview.classList.add('hidden');
+                            editor.value = file.content;
+                            // Trigger syntax highlighting if we had it, or simple line numbers
+                            this.updateLineNumbers();
+                        }
+                    }
+                    this.renderList();
+                },
+                delete(path) {
+                     if (confirm(`Delete ${path}?`)) {
+                        app.state.files = app.state.files.filter(f => f.path !== path);
+                        if (app.state.selectedFile === path) {
+                            app.state.selectedFile = null;
+                            document.getElementById('code-editor').value = '';
+                            document.getElementById('current-file-label').innerText = 'No file selected';
+                        }
+                        app.persistence.save();
+                        this.renderList();
+                     }
+                },
+                createFilePrompt() {
+                    const path = prompt("Enter file path (e.g. scripts/utils.js):");
+                    if (path) {
+                        this.add(path, "// New file");
+                        this.select(path);
+                    }
+                },
+                updateLineNumbers() {
+                    const editor = document.getElementById('code-editor');
+                    const linesDiv = document.getElementById('editor-lines');
+                    const lineCount = editor.value.split('\n').length;
+                    linesDiv.innerHTML = Array.from({length: lineCount}, (_, i) => i + 1).join('<br>');
+                    
+                    // Sync scroll
+                    editor.onscroll = () => { linesDiv.scrollTop = editor.scrollTop; };
+                },
+                renderList() {
+                    const list = document.getElementById('file-list');
+                    if(!list) return;
+                    list.innerHTML = '';
+                    
+                    app.state.files.sort((a,b) => a.path.localeCompare(b.path)).forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = `p-2 text-sm cursor-pointer hover:bg-surface2 rounded flex items-center justify-between group ${app.state.selectedFile === file.path ? 'bg-surface2 text-white font-bold' : 'text-gray-400'}`;
+                        div.onclick = () => this.select(file.path);
+                        
+                        const nameSpan = document.createElement('span');
+                        nameSpan.innerText = file.path;
+                        div.appendChild(nameSpan);
+                        
+                        const delBtn = document.createElement('button');
+                        delBtn.innerText = '×';
+                        delBtn.className = 'text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 px-2';
+                        delBtn.onclick = (e) => { e.stopPropagation(); this.delete(file.path); };
+                        div.appendChild(delBtn);
+
+                        list.appendChild(div);
+                    });
+                }
+            },
+
+            workspace: {
+                switchTab(tab) {
+                    app.state.mobileTab = tab;
+                    // Update UI visibility based on tab (Mobile only logic usually)
+                    const files = document.getElementById('ws-col-files');
+                    const editor = document.getElementById('ws-col-editor');
+                    const icon = document.getElementById('ws-col-icon');
+                    
+                    // Reset classes for desktop (md:flex)
+                    files.className = "w-full md:w-64 bg-surface border-r border-surface2 flex-col md:flex hidden h-full";
+                    editor.className = "flex-1 flex-col bg-background md:flex hidden relative h-full";
+                    icon.className = "w-full md:w-80 bg-surface border-l border-surface2 flex-col md:flex hidden overflow-y-auto h-full";
+
+                    // Mobile override
+                    if (window.innerWidth < 768) {
+                        files.classList.add('hidden');
+                        editor.classList.add('hidden');
+                        icon.classList.add('hidden');
+                        
+                        if (tab === 'files') { files.classList.remove('hidden'); files.classList.add('flex'); }
+                        if (tab === 'editor') { editor.classList.remove('hidden'); editor.classList.add('flex'); }
+                        if (tab === 'icon') { icon.classList.remove('hidden'); icon.classList.add('flex'); }
+                    }
+                    
+                    // Update Tab buttons
+                    ['files', 'editor', 'icon'].forEach(t => {
+                        const btn = document.getElementById(`tab-btn-${t}`);
+                        if(t === tab) {
+                            btn.classList.remove('text-gray-400', 'hover:text-white');
+                            btn.classList.add('bg-primary', 'text-white', 'shadow-sm');
+                        } else {
+                            btn.classList.add('text-gray-400', 'hover:text-white');
+                            btn.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                        }
+                    });
+                }
+            },
+
+            settings: {
+                getKey() { return localStorage.getItem(API_KEY_STORAGE); },
+                setKey() {
+                    const key = prompt("Enter your Gemini API Key:");
+                    if (key) {
+                        localStorage.setItem(API_KEY_STORAGE, key);
+                        this.checkStatus();
+                    }
+                },
+                checkStatus() {
+                    const el = document.getElementById('api-status-display');
+                    if(this.getKey()) {
+                        el.innerText = "Active";
+                        el.className = "text-sm font-mono font-bold text-primary";
+                    } else {
+                        el.innerText = "Not Configured";
+                        el.className = "text-sm font-mono font-bold text-red-400";
+                    }
+                },
+                generateKey() {
+                    const key = 'JMAFK-' + crypto.randomUUID().toUpperCase();
+                    document.getElementById('generated-key').value = key;
+                },
+                copyKey() {
+                    const key = document.getElementById('generated-key').value;
+                    if(key) {
+                        navigator.clipboard.writeText(key);
+                        alert("Copied to clipboard!");
+                    }
+                }
+            },
+
+            ai: {
+                async getClient() {
+                    const key = app.settings.getKey();
+                    if (!key) throw new Error("API Key missing. Go to Settings.");
+                    return new GoogleGenAI({ apiKey: key });
+                },
+                async generateCode() {
+                    const promptInput = document.getElementById('ai-prompt');
+                    const status = document.getElementById('ai-status');
+                    const summaryPanel = document.getElementById('ai-summary-panel');
+                    const summaryTextEl = document.getElementById('ai-summary-text');
+                    const summaryCodeEl = document.getElementById('ai-summary-code');
+                    const changedFileEl = document.getElementById('ai-changed-file');
+                    
+                    const promptText = promptInput.value.trim();
+                    if (!promptText) return;
+
+                    // UI Reset
+                    document.getElementById('suggestion-box').classList.remove('visible');
+                    if (summaryPanel) summaryPanel.classList.add('hidden');
+                    
+                    let interval;
+                    try {
+                        status.classList.remove('hidden');
+                        const currentFile = app.state.selectedFile;
+                        const content = app.state.files.find(f => f.path === currentFile)?.content || "";
+                        
+                        // Animation
+                        const startTime = Date.now();
+                        interval = setInterval(() => {
+                            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                            const bars = '❚'.repeat((Math.floor((Date.now() - startTime) / 100) % 5) + 1);
+                            status.innerHTML = `Gemini is thinking <span class="text-primary">${bars}</span> ${elapsed}s`;
+                        }, 100);
+
+                        const ai = await this.getClient();
+
+                        // Context Building
+                        let contextFiles = `Target File: ${currentFile || "None"}\nContent:\n${content}`;
+                        const mentions = promptText.match(/@([a-zA-Z0-9_./-]+)/g);
+                        if (mentions) {
+                            mentions.forEach(m => {
+                                const ref = m.substring(1);
+                                const f = app.state.files.find(x => x.path === ref);
+                                if (f && f.path !== currentFile) {
+                                    contextFiles += `\n\nReferenced File: ${f.path}\nContent:\n${f.content}`;
+                                } else {
+                                    // Folder check
+                                    const folderPrefix = ref.endsWith('/') ? ref : ref + '/';
+                                    const dirFiles = app.state.files.filter(x => x.path.startsWith(folderPrefix));
+                                    dirFiles.forEach(df => {
+                                         if (df.path !== currentFile) {
+                                            contextFiles += `\n\nReferenced File (${folderPrefix}): ${df.path}\nContent:\n${df.content}`;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
+                        const systemPrompt = `
+                        You are a Minecraft Bedrock expert. 
+                        
+                        ${contextFiles}
+                        
+                        User Request: ${promptText}
+                        
+                        Instructions:
+                        1. Provide a brief, 1-sentence summary of changes.
+                        2. Provide the code.
+                        3. Use the strict format below.
+
+                        Format:
+                        >>> SUMMARY
+                        [Brief summary here]
+                        >>> CODE
+                        [>>> CREATE: path/to/file (optional if creating new file)]
+                        [Code content]
+                        
+                        NO MARKDOWN (except for the code content itself if needed, but preferably raw).
+                        `;
+
+                        const response = await ai.models.generateContent({
+                            model: "gemini-2.5-flash",
+                            contents: systemPrompt
+                        });
+
+                        const responseText = response.text;
+                        const parts = responseText.split('>>> CODE');
+
+                        let summary = "Files updated successfully.";
+                        let codePart = responseText;
+
+                        if (parts.length > 1) {
+                            summary = parts[0].replace('>>> SUMMARY', '').trim();
+                            codePart = parts[1].trim();
+                        }
+
+                        // Handle File Operations
+                        let newCode = codePart;
+                        let targetPath = currentFile;
+
+                        const createMatch = newCode.match(/^>>> CREATE: (.+)$/m);
+                        if (createMatch) {
+                            targetPath = createMatch[1].trim();
+                            newCode = newCode.replace(createMatch[0], '').trim();
+                            app.files.add(targetPath, newCode);
+                        } else if (targetPath) {
+                            app.files.update(targetPath, newCode);
+                        } else {
+                            // Fallback if no file selected and no CREATE directive
+                             throw new Error("No file selected and AI did not specify a new file path.");
+                        }
+                        
+                        app.files.select(targetPath);
+
+                        // Update Panel
+                        if (summaryTextEl && summaryPanel) {
+                            summaryTextEl.innerText = summary;
+                            summaryCodeEl.innerText = newCode;
+                            changedFileEl.innerText = targetPath;
+                            summaryPanel.classList.remove('hidden');
+                        }
+
+                        promptInput.value = '';
+                        status.innerText = "Done!";
+                        setTimeout(() => status.classList.add('hidden'), 3000);
+
+                    } catch (e) {
+                        console.error(e);
+                        status.innerText = "Error: " + e.message;
+                    } finally {
+                        if (interval) clearInterval(interval);
+                    }
+                },
+                async generateIcon() {
+                    // Placeholder for icon generation logic (requires Imagen model access logic from snippets)
+                    // For now, we simulate or use basic text generation as prompt logic is complex
+                     const prompt = document.getElementById('icon-prompt').value;
+                     if(!prompt) return alert("Enter a prompt");
+                     
+                     try {
+                        const ai = await this.getClient();
+                         // Note: Actual Image generation requires user selected key with billing usually
+                         // Assuming text-to-image model availability or simulating with text
+                         alert("Image generation requires paid API key integration. Feature placeholder.");
+                     } catch(e) {
+                         alert(e.message);
+                     }
+                },
+                stopGeneration() {
+                    // Implementation requires AbortController in fetch usually, placeholder here
+                }
+            },
+            
+            manifest: {
+                generate() {
+                    // Gather form data
+                    const name = document.getElementById('m-name').value;
+                    const desc = document.getElementById('m-desc').value;
+                    const author = document.getElementById('m-author').value;
+                    const version = document.getElementById('m-version').value.split('.').map(Number);
+                    const engine = document.getElementById('m-engine').value.split('.').map(Number);
+                    
+                    const config = {
+                        format_version: 2,
+                        header: {
+                            name: name,
+                            description: desc,
+                            uuid: crypto.randomUUID(),
+                            version: version,
+                            min_engine_version: engine
+                        },
+                        modules: [
+                             { type: "data", uuid: crypto.randomUUID(), version: version },
+                             { type: "script", uuid: crypto.randomUUID(), version: version, entry: "scripts/main.js" }
+                        ],
+                        dependencies: app.state.config.dependencies, // Keep existing deps
+                        metadata: { authors: [author] }
+                    };
+                    
+                    app.state.config = config;
+                    app.files.add('manifest.json', JSON.stringify(config, null, 2));
+                    app.router.go('workspace');
+                },
+                addDependency() {
+                    app.state.config.dependencies.push({ module_name: "@minecraft/server", version: "2.0.0" });
+                    this.renderDependencies();
+                },
+                renderDependencies() {
+                    const list = document.getElementById('m-dependencies-list');
+                    if(!list) return;
+                    list.innerHTML = '';
+                    app.state.config.dependencies.forEach((dep, idx) => {
+                        const div = document.createElement('div');
+                        div.className = "flex gap-2";
+                        div.innerHTML = `
+                            <input type="text" value="${dep.module_name}" onchange="app.state.config.dependencies[${idx}].module_name = this.value" class="flex-1 bg-background border border-surface2 rounded p-2 text-sm">
+                            <input type="text" value="${dep.version}" onchange="app.state.config.dependencies[${idx}].version = this.value" class="w-24 bg-background border border-surface2 rounded p-2 text-sm">
+                            <button onclick="app.state.config.dependencies.splice(${idx},1); app.manifest.renderDependencies()" class="text-red-400 hover:text-white px-2">×</button>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+            },
+            
+            export: {
+                async zip() {
+                    const zip = new JSZip();
+                    app.state.files.forEach(f => {
+                        if(f.isBinary) zip.file(f.path, f.content, {base64:true});
+                        else zip.file(f.path, f.content);
+                    });
+                    const blob = await zip.generateAsync({type:"blob"});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${app.state.config.header.name.replace(/\s+/g,'_')}.zip`;
+                    link.click();
+                },
+                async mcpack() {
+                    const zip = new JSZip();
+                    app.state.files.forEach(f => {
+                        if(f.isBinary) zip.file(f.path, f.content, {base64:true});
+                        else zip.file(f.path, f.content);
+                    });
+                    const blob = await zip.generateAsync({type:"blob"});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${app.state.config.header.name.replace(/\s+/g,'_')}.mcpack`;
+                    link.click();
+                }
+            },
+
+            import: {
+                handle(e) {
+                    if(e.target.files.length > 0) this.processFile(e.target.files[0]);
+                },
+                async processFile(file) {
+                    try {
+                        const zip = await JSZip.loadAsync(file);
+                        app.state.files = [];
+                        const promises = [];
+                        
+                        zip.forEach((relPath, fileEntry) => {
+                            if(fileEntry.dir) return;
+                            promises.push(async () => {
+                                const isBinary = relPath.endsWith('.png') || relPath.endsWith('.jpg');
+                                if(isBinary) {
+                                    const content = await fileEntry.async('base64');
+                                    app.state.files.push({ path: relPath, content, isBinary: true});
+                                } else {
+                                    const content = await fileEntry.async('string');
+                                    app.state.files.push({ path: relPath, content });
+                                    if(relPath === 'manifest.json') {
+                                        app.state.config = JSON.parse(content);
+                                    }
+                                }
+                            });
+                        });
+                        
+                        // Wait for promises and ensure correct typing
+                        await Promise.all(promises.map(p => p()));
+                        
+                        app.router.go('workspace');
+                        if(app.state.files.length > 0) app.files.select(app.state.files[0].path);
+                        
+                    } catch(e) {
+                        alert("Failed to import: " + e.message);
+                    }
+                }
+            },
+
+            help: {
+                toggle() {
+                    const modal = document.getElementById('help-modal');
+                    modal.classList.toggle('hidden');
+                    modal.classList.toggle('flex');
+                }
+            },
+
+            hub: {
+                async init() {
+                    await this.refresh();
+                },
+
+                async refresh() {
+                    const grid = document.getElementById('hub-grid');
+                    const loading = document.getElementById('hub-loading');
+                    const errorDiv = document.getElementById('hub-error');
+
+                    if (!grid) return;
+
+                    grid.innerHTML = '';
+                    loading.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+
+                    try {
+                        const targetUrl = 'https://gist.githubusercontent.com/JesmerAFK/e65618fc87347bff82f863c284a4ee62/raw/';
+                        const res = await fetch(targetUrl);
+
+                        if (!res.ok) throw new Error(`Failed to fetch content: ${res.status} ${res.statusText}`);
+
+                        this.data = await res.json();
+
+                        if (!Array.isArray(this.data) || this.data.length === 0) {
+                            throw new Error("No content found in the repository.");
+                        }
+
+                        this.renderGrid(this.data);
+                        this.fetchDownloadCounts();
+                    } catch (e) {
+                        console.error("Store Fetch Error:", e);
+                        loading.classList.add('hidden');
+                        errorDiv.classList.remove('hidden');
+                        document.getElementById('hub-error-msg').innerText = `Error loading store: ${e.message}`;
+                    } finally {
+                        loading.classList.add('hidden');
+                    }
+                },
+
+                renderGrid(items) {
+                    const grid = document.getElementById('hub-grid');
+                    grid.innerHTML = items.map(item => `
+                        <div onclick="app.hub.openPost('${item.id}')" class="bg-surface border border-surface2 rounded-xl overflow-hidden hover:border-primary transition-all cursor-pointer group hover:-translate-y-1 shadow-lg">
+                            <div class="aspect-video bg-surface2 relative overflow-hidden">
+                                <img src="${item.thumbnail}" class="w-full h-full object-cover transition-transform group-hover:scale-105" onerror="this.src='https://placehold.co/400x225/1a1a2e/16a34a?text=No+Image'">
+                                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-xs font-bold text-white uppercase">
+                                    ${item.type}
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-bold text-white text-lg mb-1 truncate">${item.title}</h3>
+                                <p class="text-xs text-gray-400 mb-3">by ${item.author}</p>
+                                <p class="text-sm text-gray-300 line-clamp-2 h-10">${item.description}</p>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-primary group-hover:underline">View Details</span>
+                                    <span class="text-xs text-gray-500 flex items-center gap-1" title="Downloads">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        <span id="dl-count-${item.id}">0</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                },
+
+                async fetchDownloadCounts() {
+                    try {
+                        const res = await fetch('/.netlify/functions/download-count');
+                        const data = await res.json();
+                        if (data.counts) {
+                            Object.entries(data.counts).forEach(([id, count]) => {
+                                const el = document.getElementById(`dl-count-${id}`);
+                                if (el) el.innerText = count.toLocaleString();
+                            });
+                        }
+                    } catch (e) { console.error(e); }
+                },
+
+                async loadComments(itemId) {
+                    const container = document.getElementById('comments-list');
+                    container.innerHTML = '<p class="text-gray-400 text-sm">Loading comments...</p>';
+                    try {
+                        const res = await fetch(`/.netlify/functions/comments?itemId=${itemId}`);
+                        const comments = await res.json();
+                        if (comments.length === 0) {
+                            container.innerHTML = '<p class="text-gray-400 text-sm text-center italic">No comments yet.</p>';
+                            return;
+                        }
+                        const commentMap = {};
+                        comments.forEach(c => { c.children = []; commentMap[c.id] = c; });
+                        const rootComments = [];
+                        comments.forEach(c => {
+                            if (c.parent_id && commentMap[c.parent_id]) commentMap[c.parent_id].children.push(c);
+                            else rootComments.push(c);
+                        });
+                        container.innerHTML = rootComments.map(c => this.renderComment(c)).join('');
+                    } catch (e) {
+                        container.innerHTML = '<p class="text-red-400 text-sm">Failed to load comments.</p>';
+                    }
+                },
+
+                renderComment(c) {
+                    const date = new Date(c.created_at).toLocaleDateString();
+                    return `
+                        <div class="bg-surface p-4 rounded-lg border border-surface2 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                                        ${c.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-white text-sm block">${c.username}</span>
+                                        <span class="text-[10px] text-gray-500">${date}</span>
+                                    </div>
+                                </div>
+                                <button onclick="app.hub.replyTo('${c.id}', '${c.username}')" class="text-xs text-gray-400 hover:text-primary">Reply</button>
+                            </div>
+                            <p class="text-gray-300 text-sm pl-10">${c.content}</p>
+                            <div class="ml-10 mt-3 space-y-3 border-l-2 border-surface2 pl-4 ${c.children.length > 0 ? '' : 'hidden'}">
+                                ${c.children.map(child => this.renderComment(child)).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+
+                replyTo(parentId, username) {
+                    document.getElementById('comment-parent-id').value = parentId;
+                    document.getElementById('comment-reply-indicator').classList.remove('hidden');
+                    document.getElementById('replying-to-user').innerText = username;
+                    document.querySelector('form[onsubmit="app.hub.postComment(event)"]').scrollIntoView({behavior: 'smooth'});
+                },
+
+                cancelReply() {
+                    document.getElementById('comment-parent-id').value = '';
+                    document.getElementById('comment-reply-indicator').classList.add('hidden');
+                },
+
+                async postComment(e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const itemId = app.state.currentPost ? app.state.currentPost.id : null;
+                    if (!itemId) return;
+                    const username = form.username.value;
+                    const content = form.content.value;
+                    const parentId = form.parentId.value || null;
+
+                    localStorage.setItem('comment_username', username);
+
+                    try {
+                        const res = await fetch('/.netlify/functions/comments', {
+                            method: 'POST',
+                            body: JSON.stringify({ itemId, username, content, parentId })
+                        });
+                        if (res.status === 200) {
+                            form.content.value = '';
+                            this.cancelReply();
+                            this.loadComments(itemId);
+                        } else {
+                            alert("Failed to post comment.");
+                        }
+                    } catch (e) { alert("An error occurred."); }
+                },
+                openPost(id) {
+                    const item = this.data.find(i => i.id === id);
+                    if (!item) return;
+
+                    document.getElementById('post-title').innerText = item.title;
+                    document.getElementById('post-author').innerHTML = `${item.author}`;
+                    document.getElementById('post-type').innerText = item.type;
+                    document.getElementById('post-thumb').src = item.thumbnail;
+                    document.getElementById('post-banner').src = item.thumbnail;
+
+                    const btn = document.getElementById('post-download-btn');
+                    btn.href = item.download_url;
+                    btn.onclick = () => {
+                        fetch(`/.netlify/functions/download-count?itemId=${item.id}`, { method: 'POST' });
+                    };
+
+                    const contentDiv = document.getElementById('post-content');
+                    const desc = item.long_description || item.description || "_No details provided._";
+                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(desc));
+
+                    const savedUsername = localStorage.getItem('comment_username');
+                    if (savedUsername) {
+                        const userField = document.querySelector('input[name="username"]');
+                        if (userField) userField.value = savedUsername;
+                    }
+
+                    this.loadComments(item.id);
+                    app.state.currentPost = item;
+
+                    const keyBtn = document.getElementById('activation-key-btn');
+                    if (item.key) {
+                        keyBtn.classList.remove('hidden');
+                    } else {
+                        keyBtn.classList.add('hidden');
+                    }
+
+                    app.router.go('post');
+                },
+                
+                toggleLike() {
+                    // Simple local storage like persistence for UI
+                    const btn = document.getElementById('post-like-btn');
+                    const countEl = document.getElementById('post-like-count');
+                    btn.classList.toggle('text-red-500');
+                    if(btn.classList.contains('text-red-500')) {
+                        countEl.innerText = "Liked!";
+                    } else {
+                        countEl.innerText = "Like";
+                    }
+                },
+                
+                showRewardModal() {
+                    document.getElementById('reward-modal').classList.remove('hidden');
+                },
+                closeRewardModal() {
+                    document.getElementById('reward-modal').classList.add('hidden');
+                },
+                markStep1Waiting() {
+                    document.getElementById('step1-status').innerText = "Checking...";
+                    setTimeout(() => document.getElementById('step1-status').innerText = "Done ✅", 5000);
+                },
+                markStep2Waiting() {
+                    document.getElementById('step2-status').innerText = "Checking...";
+                    setTimeout(() => {
+                        document.getElementById('step2-status').innerText = "Done ✅";
+                        document.getElementById('key-reveal').classList.remove('hidden');
+                        document.getElementById('activation-key-display').value = app.state.currentPost.key || "DEMO-KEY-123";
+                    }, 5000);
+                },
+                copyKey() {
+                    const key = document.getElementById('activation-key-display').value;
+                    navigator.clipboard.writeText(key);
+                }
+            }
+        };
+
+        // CRITICAL: Expose app to global scope for HTML inline events
+        window.app = app;
+        app.generateManifest = app.manifest.generate; // Shortcut alias
+
+        // Init App
+        app.init();
+
+    </script>
 </body>
 
 </html>
