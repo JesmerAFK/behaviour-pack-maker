@@ -1,0 +1,5 @@
+# netlify.toml
+[build]
+  publish = "dist"
+  functions = "netlify/functions" # remove or change if you don't use functions
+  command = "npm run build"
